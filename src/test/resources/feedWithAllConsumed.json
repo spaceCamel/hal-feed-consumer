@@ -1,0 +1,29 @@
+{
+    "_links": {
+        "self": {
+            "href": "http://feed"
+        }
+    },
+    "_embedded": {
+        "entries": [
+            {
+                "_links": {
+                    "self": {
+                        "href": "http://feed/idOfAnotherAlreadyConsumed"
+                    }
+                },
+                "id": "idOfAnotherAlreadyConsumed",
+                "published": "22/05/2013 00:00:00"
+            },
+            {
+                "_links": {
+                    "self": {
+                        "href": "http://feed/idOfAlreadyConsumed"
+                    }
+                },
+                "id": "idOfalreadyConsumed",
+                "published": "22/05/2013 00:00:00"
+            }
+        ]
+    }
+}
