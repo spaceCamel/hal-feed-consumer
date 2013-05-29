@@ -7,6 +7,13 @@
     <groupId>com.qmetric</groupId>
     <artifactId>hal-feed-consumer</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <description>Java library for consuming HAL+JSON feeds</description>
+    <packaging>jar</packaging>
+    <name>hal-feed-consumer</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -75,5 +82,11 @@
             </plugin>
         </plugins>
     </build>
+
+    <scm>
+        <connection>git@github.com:qmetric/hal-feed-consumer.git</connection>
+        <developerConnection>git@github.com:qmetric/hal-feed-consumer.git</developerConnection>
+        <url>https://github.com/qmetric/hal-feed-consumer</url>
+    </scm>
 
 </project>
