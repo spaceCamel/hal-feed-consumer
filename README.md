@@ -7,7 +7,7 @@ Usage
 -----
 
 First, configure a data store used by the consumer to track which feed entries need to be consumed, and which have already been consumed.
-An Amazon SimpleDB based implementation is supplied as part of the library.
+An [Amazon SimpleDB](http://aws.amazon.com/simpledb/) based implementation is supplied as part of the library.
 
 ```java
 final AmazonSimpleDB simpleDBClient = new AmazonSimpleDBClient(new BasicAWSCredentials("access key", "secret key"));
