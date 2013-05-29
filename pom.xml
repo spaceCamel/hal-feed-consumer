@@ -84,8 +84,8 @@
     </build>
 
     <scm>
-        <connection>scm:git@github.com:qmetric/hal-feed-consumer.git</connection>
-        <developerConnection>scm:git@github.com:qmetric/hal-feed-consumer.git</developerConnection>
+        <connection>scm:git:git@github.com:qmetric/hal-feed-consumer.git</connection>
+        <developerConnection>scm:git:git@github.com:qmetric/hal-feed-consumer.git</developerConnection>
         <url>https://github.com/qmetric/hal-feed-consumer</url>
     </scm>
 
