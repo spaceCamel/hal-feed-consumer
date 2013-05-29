@@ -1,7 +1,7 @@
-hal-feed-consumer
-=================
+HAL+JSON feed consumer
+======================
 
-Java library used to consume HAL+JSON feeds produced by [hal-feed-server](https://github.com/qmetric/hal-feed-server).
+Java library used to consume [HAL+JSON](http://stateless.co/hal_specification.html) feeds produced by [hal-feed-server](https://github.com/qmetric/hal-feed-server).
 
 Usage
 -----
@@ -32,7 +32,7 @@ new FeedConsumerScheduler(consumer, 1, MINUTES).start();
 ```
 
 
-Library available from maven central
+Library available from [Maven central repository](http://search.maven.org/)
 
 ```
 <dependency>
