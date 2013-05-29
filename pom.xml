@@ -4,7 +4,7 @@
 
     <groupId>com.qmetric</groupId>
     <artifactId>hal-feed-consumer</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <description>Java library for consuming HAL+JSON feeds</description>
     <packaging>jar</packaging>
     <name>hal-feed-consumer</name>
