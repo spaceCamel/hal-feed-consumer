@@ -1,5 +1,8 @@
 package com.qmetric.feed.consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -7,6 +10,8 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public class FeedConsumerScheduler
 {
+    private static final Logger LOG = LoggerFactory.getLogger(FeedConsumerScheduler.class);
+
     private final FeedConsumer consumer;
 
     private final long interval;
@@ -41,7 +46,7 @@ public class FeedConsumerScheduler
                 }
                 catch (Exception e)
                 {
-                    e.printStackTrace();
+                    LOG.error("Failed to consume feed", e);
                 }
             }
         }, 0, interval, intervalUnit);
