@@ -23,7 +23,7 @@ class SimpleDBConsumedEntryStoreTest extends Specification {
     def "should store entry as being consumed"()
     {
         given:
-        feedEntry.getValue("id") >> feedEntryName
+        feedEntry.getValue("_id") >> feedEntryName
 
         when:
         consumedEntryStore.markAsConsumed(feedEntry)

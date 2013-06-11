@@ -17,7 +17,7 @@ public class SimpleDBConsumedEntryStore implements ConsumedFeedEntryStore
 {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss");
 
-    private static final String ID_PROPERTY = "id";
+    private static final String ID_PROPERTY = "_id";
 
     private static final String CONSUMED_DATE_ATTR = "consumed";
 

@@ -24,12 +24,12 @@ class FeedConsumerTest extends Specification {
 
         then:
         1 * consumerAction.process(_) >> {
-            assert (it[0] as ReadableRepresentation).getValue('id') == 'idOfOldestUnconsumed'
+            assert (it[0] as ReadableRepresentation).getValue('_id') == 'idOfOldestUnconsumed'
         }
 
         then:
         1 * consumerAction.process(_) >> {
-            assert (it[0] as ReadableRepresentation).getValue('id') == 'idOfNewestUnconsumed'
+            assert (it[0] as ReadableRepresentation).getValue('_id') == 'idOfNewestUnconsumed'
         }
     }
 

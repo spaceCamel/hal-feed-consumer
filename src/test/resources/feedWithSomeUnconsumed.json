@@ -12,8 +12,8 @@
                         "href": "http://feed/idOfNewestUnconsumed"
                     }
                 },
-                "id": "idOfNewestUnconsumed",
-                "published": "24/05/2013 00:00:00"
+                "_id": "idOfNewestUnconsumed",
+                "_published": "24/05/2013 00:00:00"
             },
             {
                 "_links": {
@@ -21,8 +21,8 @@
                         "href": "http://feed/idOfOldestUnconsumed"
                     }
                 },
-                "id": "idOfOldestUnconsumed",
-                "published": "23/05/2013 00:00:00"
+                "_id": "idOfOldestUnconsumed",
+                "_published": "23/05/2013 00:00:00"
             },
             {
                 "_links": {
@@ -30,8 +30,8 @@
                         "href": "http://feed/idOfAnotherAlreadyConsumed"
                     }
                 },
-                "id": "idOfAnotherAlreadyConsumed",
-                "published": "22/05/2013 00:00:00"
+                "_id": "idOfAnotherAlreadyConsumed",
+                "_published": "22/05/2013 00:00:00"
             },
             {
                 "_links": {
@@ -39,8 +39,8 @@
                         "href": "http://feed/idOfAlreadyConsumed"
                     }
                 },
-                "id": "idOfalreadyConsumed",
-                "published": "22/05/2013 00:00:00"
+                "_id": "idOfalreadyConsumed",
+                "_published": "22/05/2013 00:00:00"
             }
         ]
 
