@@ -41,3 +41,14 @@ Library available from [Maven central repository](http://search.maven.org/)
     <version>${VERSION}</version>
 </dependency>
 ```
+
+
+Implementation limitations
+--------------------------
+
+There are currently some limitations with the current feed consumer implementation, described below:
+
+* Does not support the competing consumer pattern (yet). One consumer only per Amazon SimpleDB store.
+
+* On any error, the current feed consumption is aborted. Retry will occur on next scheduled feed check, starting from the entry where error occurred.
+  If error does not resolve over time, this will result in continuous error/ retry behaviour, with no other feed entries being read.
