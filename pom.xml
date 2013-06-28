@@ -5,13 +5,44 @@
     <groupId>com.qmetric</groupId>
     <artifactId>hal-feed-consumer</artifactId>
     <version>1.3-SNAPSHOT</version>
-    <description>Java library for consuming HAL+JSON feeds</description>
     <packaging>jar</packaging>
     <name>hal-feed-consumer</name>
+    <description>Java library for consuming HAL+JSON feeds (https://github.com/qmetric/hal-feed-server)</description>
+    <url>https://github.com/qmetric/hal-feed-consumer</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:qmetric/hal-feed-consumer.git</connection>
+        <developerConnection>scm:git:git@github.com:qmetric/hal-feed-consumer.git</developerConnection>
+        <url>git@github.com:qmetric/hal-feed-consumer.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>qmg-hlewis</id>
+            <name>Huw Lewis</name>
+            <email>hlewis@qmetric.co.uk</email>
+            <organization>qmetric</organization>
+            <organizationUrl>https://github.com/organizations/qmetric</organizationUrl>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
@@ -59,9 +90,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.8.5</version>
+            <groupId>org.objenesis</groupId>
+            <artifactId>objenesis</artifactId>
+            <version>1.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -86,24 +117,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>nexus</id>
-            <name>qmetric-snapshot</name>
-            <url>https://ci.qmetric.co.uk/nexus/content/repositories/qmetric-snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>nexus</id>
-            <name>qmetric-releases</name>
-            <url>https://ci.qmetric.co.uk/nexus/content/repositories/qmetric-releases</url>
-        </repository>
-    </distributionManagement>
-
-    <scm>
-        <connection>scm:git:git@github.com:qmetric/hal-feed-consumer.git</connection>
-        <developerConnection>scm:git:git@github.com:qmetric/hal-feed-consumer.git</developerConnection>
-        <url>https://github.com/qmetric/hal-feed-consumer</url>
-    </scm>
 
 </project>
