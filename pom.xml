@@ -6,7 +6,7 @@
     <artifactId>hal-feed-consumer</artifactId>
     <version>1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>hal-feed-consumer</name>
+    <name>Hal+JSON feed consumer library</name>
     <description>Java library for consuming HAL+JSON feeds (https://github.com/qmetric/hal-feed-server)</description>
     <url>https://github.com/qmetric/hal-feed-consumer</url>
 
