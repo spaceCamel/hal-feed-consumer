@@ -27,25 +27,27 @@ public class UnconsumedFeedEntriesFinder
 
     public List<ReadableRepresentation> find()
     {
-
-        final ReadableRepresentation readableRepresentation = representationFactory.readRepresentation(endpoint.reader());
+        final ReadableRepresentation feedFirstPage = representationFactory.readRepresentation(endpoint.reader());
 
         final List<ReadableRepresentation> unconsumed = newArrayList();
 
-        Optional<String> nextLink = collectUnconsumedEntriesAndReturnNextLink(readableRepresentation, unconsumed);
+        FeedDetails feedDetails = extractFeedDetailsFrom(feedFirstPage);
+        unconsumed.addAll(feedDetails.getUnconsumed());
 
-        while (nextLink.isPresent())
+        while (feedDetails.getNext().isPresent())
         {
 
-            final ReadableRepresentation nextPage = representationFactory.readRepresentation(endpoint.reader(nextLink.get()));
-            nextLink = collectUnconsumedEntriesAndReturnNextLink(nextPage, unconsumed);
+            final ReadableRepresentation nextPage = representationFactory.readRepresentation(endpoint.reader(feedDetails.getNext().get()));
+            feedDetails = extractFeedDetailsFrom(nextPage);
+            unconsumed.addAll(feedDetails.getUnconsumed());
         }
 
         return unconsumed;
     }
 
-    private Optional<String> collectUnconsumedEntriesAndReturnNextLink(final ReadableRepresentation readableRepresentation, final List<ReadableRepresentation> unconsumed)
+    private FeedDetails extractFeedDetailsFrom(final ReadableRepresentation readableRepresentation)
     {
+        final List<ReadableRepresentation> unconsumed = newArrayList();
         for (ReadableRepresentation entry : readableRepresentation.getResourcesByRel("entries"))
         {
             if (consumedFeedEntryStore.notAlreadyConsumed(entry))
@@ -54,14 +56,14 @@ public class UnconsumedFeedEntriesFinder
             }
             else
             {
-                return Optional.absent();
+                return new FeedDetails(unconsumed, Optional.<String>absent());
             }
         }
 
-        return returnNextLinkIfPresent(readableRepresentation);
+        return new FeedDetails(unconsumed, nextLink(readableRepresentation));
     }
 
-    private Optional<String> returnNextLinkIfPresent(final ReadableRepresentation readableRepresentation)
+    private Optional<String> nextLink(final ReadableRepresentation readableRepresentation)
     {
         if (nextPageOfUnconsumedFeedsExists(readableRepresentation))
         {
@@ -77,5 +79,28 @@ public class UnconsumedFeedEntriesFinder
     private boolean nextPageOfUnconsumedFeedsExists(final ReadableRepresentation readableRepresentation)
     {
         return !readableRepresentation.getLinksByRel("next").isEmpty();
+    }
+
+    private class FeedDetails
+    {
+        private List<ReadableRepresentation> unconsumed;
+
+        private Optional<String> next;
+
+        FeedDetails(final List<ReadableRepresentation> unconsumed, final Optional<String> next)
+        {
+            this.unconsumed = unconsumed;
+            this.next = next;
+        }
+
+        public Optional<String> getNext()
+        {
+            return next;
+        }
+
+        public List<ReadableRepresentation> getUnconsumed()
+        {
+            return unconsumed;
+        }
     }
 }

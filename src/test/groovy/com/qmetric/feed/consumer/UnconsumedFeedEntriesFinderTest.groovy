@@ -12,7 +12,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
 
     def store = new UnconsumedFeedEntriesFinder(endpoint, consumedFeedEntryStore)
 
-    def "should return all entries provided feed contains all consumed entries"()
+    def "should return all entries provided feed contains all unconsumed entries"()
     {
         given:
         endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumed.json').openStream())
