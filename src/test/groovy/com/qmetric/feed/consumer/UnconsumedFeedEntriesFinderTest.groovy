@@ -19,7 +19,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.find();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
 
         then:
         unprocessedList.size() == 2
@@ -34,7 +34,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, true, false]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.find();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
 
         then:
         unprocessedList.size() == 3
@@ -48,7 +48,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, true, false]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.find();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
 
         then:
         unprocessedList.size() == 3
@@ -61,7 +61,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [false]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.find();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
 
         then:
         unprocessedList.size() == 0

@@ -3,62 +3,43 @@ package com.qmetric.feed.consumer
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation
 import spock.lang.Specification
 
-class FeedConsumerTest extends Specification {
+class FeedConsumerTest extends Specification
+{
 
-    final endpoint = Mock(FeedEndpoint)
+    final unconsumedFeedEntriesFinder = Mock(UnconsumedFeedEntriesFinder)
 
     final consumerAction = Mock(ConsumerAction)
 
     final consumedFeedEntryStore = Mock(ConsumedFeedEntryStore)
 
-    final consumer = new FeedConsumer(endpoint, consumedFeedEntryStore, consumerAction)
+    def feedEntry1 = Mock(ReadableRepresentation)
 
-    def "should consume unconsumed in descending order of feed publish date"()
+    def feedEntry2 = Mock(ReadableRepresentation)
+
+    final consumer = new FeedConsumer(unconsumedFeedEntriesFinder, consumedFeedEntryStore, consumerAction)
+
+    def "should consume all entries returned by finder"()
     {
         given:
-        consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, false]
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+        unconsumedFeedEntriesFinder.findUnconsumed() >> Arrays.asList(feedEntry1, feedEntry2)
 
         when:
         consumer.consume()
 
         then:
-        1 * consumerAction.process(_) >> {
-            assert (it[0] as ReadableRepresentation).getValue('_id') == 'idOfOldestUnconsumed'
-        }
+        2 * consumerAction.process(_)
 
-        then:
-        1 * consumerAction.process(_) >> {
-            assert (it[0] as ReadableRepresentation).getValue('_id') == 'idOfNewestUnconsumed'
-        }
     }
 
-    def "should mark entry on consumption to prevent duplicate consumes"()
+    def "should markAsConsumed all entries returned by finder"()
     {
         given:
-        consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, false]
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+        unconsumedFeedEntriesFinder.findUnconsumed() >> Arrays.asList(feedEntry1, feedEntry2)
 
         when:
         consumer.consume()
 
         then:
         2 * consumedFeedEntryStore.markAsConsumed(_)
-        2 * consumerAction.process(_)
-    }
-
-    def "should not check for further unconsumed entries once a consumed entry is found"()
-    {
-        given:
-        consumedFeedEntryStore.notAlreadyConsumed(_) >>> [false]
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllConsumed.json').openStream())
-
-        when:
-        consumer.consume()
-
-        then:
-        1 * consumedFeedEntryStore.notAlreadyConsumed(_)
-        0 * consumerAction.process(_)
-        0 * consumedFeedEntryStore.markAsConsumed(_)
     }
 }

@@ -25,13 +25,17 @@ public class UnconsumedFeedEntriesFinder
         this.representationFactory = new DefaultRepresentationFactory();
     }
 
-    public List<ReadableRepresentation> find()
+    public List<ReadableRepresentation> findUnconsumed()
     {
         final ReadableRepresentation feedFirstPage = representationFactory.readRepresentation(endpoint.reader());
 
         final List<ReadableRepresentation> unconsumed = newArrayList();
 
+        System.out.println(String.format("The number of total entries returned are %d ", feedFirstPage.getResourcesByRel("entries").size()));
+
         FeedDetails feedDetails = extractFeedDetailsFrom(feedFirstPage);
+
+        System.out.println(String.format("The number of total unused entries returned are %d ", feedDetails.getUnconsumed().size()));
         unconsumed.addAll(feedDetails.getUnconsumed());
 
         while (feedDetails.getNext().isPresent())
