@@ -6,20 +6,26 @@ import spock.lang.Specification
 class UnconsumedFeedEntriesFinderTest extends Specification
 {
 
-    def endpoint = Mock(FeedEndpoint)
+    def firstPageEndpoint = Mock(FeedEndpoint)
+
+    def secondPageEndpoint = Mock(FeedEndpoint)
+
+    def thirdPageEndpoint = Mock(FeedEndpoint)
 
     def consumedFeedEntryStore = Mock(ConsumedFeedEntryStore)
 
-    def store = new UnconsumedFeedEntriesFinder(endpoint, consumedFeedEntryStore)
+    def feedEndpointFactory = Mock(FeedEndpointFactory)
+
+    def store = new UnconsumedFeedEntriesFinder(feedEndpointFactory, consumedFeedEntryStore)
 
     def "should return all entries provided feed contains all unconsumed entries"()
     {
         given:
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumed.json').openStream())
+        firstPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumed.json').openStream())
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed(firstPageEndpoint);
 
         then:
         unprocessedList.size() == 2
@@ -30,11 +36,11 @@ class UnconsumedFeedEntriesFinderTest extends Specification
     def "should return only unconsumed entries provided feed contains some unconsumed entries"()
     {
         given:
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+        firstPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, true, false]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed(firstPageEndpoint);
 
         then:
         unprocessedList.size() == 3
@@ -43,12 +49,14 @@ class UnconsumedFeedEntriesFinderTest extends Specification
     def "should paginate to next feed if all entries in the feed are unconsumed"()
     {
         given:
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumedAndNextLink.json').openStream())
-        endpoint.reader(_) >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+        firstPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumedAndNextLink.json').openStream())
+        feedEndpointFactory.create(_ as String) >> secondPageEndpoint
+        secondPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, true, false]
 
+
         when:
-        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed(firstPageEndpoint);
 
         then:
         unprocessedList.size() == 3
@@ -57,13 +65,15 @@ class UnconsumedFeedEntriesFinderTest extends Specification
     def "should paginate to multiple pages"()
     {
         given:
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumedAndNextLink.json').openStream())
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/anotherFeedWithAllUnconsumedAndNextLink.json').openStream())
-        endpoint.reader(_) >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+        firstPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumedAndNextLink.json').openStream())
+        feedEndpointFactory.create(_ as String) >>> [ secondPageEndpoint, thirdPageEndpoint]
+        secondPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/anotherFeedWithAllUnconsumedAndNextLink.json').openStream())
+        thirdPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, true, true, true, false]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed(firstPageEndpoint);
 
         then:
         unprocessedList.size() == 5
@@ -72,11 +82,11 @@ class UnconsumedFeedEntriesFinderTest extends Specification
     def "should return none when feed has all consumed"()
     {
         given:
-        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllConsumed.json').openStream())
+        firstPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllConsumed.json').openStream())
         consumedFeedEntryStore.notAlreadyConsumed(_) >>> [false]
 
         when:
-        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed(firstPageEndpoint);
 
         then:
         unprocessedList.size() == 0

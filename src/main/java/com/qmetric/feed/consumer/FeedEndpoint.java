@@ -24,14 +24,9 @@ public class FeedEndpoint
 
     public Reader reader()
     {
-        return reader(feedUrl);
-    }
-
-    public Reader reader(final String url)
-    {
         try
         {
-            return new InputStreamReader(resty.text(url).stream());
+            return new InputStreamReader(resty.text(feedUrl).stream());
         }
         catch (IOException e)
         {

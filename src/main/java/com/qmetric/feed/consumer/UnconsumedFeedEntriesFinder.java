@@ -7,6 +7,7 @@ import com.theoryinpractise.halbuilder.api.Link;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 
+import java.io.Reader;
 import java.util.List;
 
 import static com.google.common.collect.FluentIterable.from;
@@ -17,21 +18,20 @@ public class UnconsumedFeedEntriesFinder
 
     public static final String NEXT = "next";
 
-    private final FeedEndpoint endpoint;
-
     private final ConsumedFeedEntryStore consumedFeedEntryStore;
 
     private final RepresentationFactory representationFactory;
 
-    public UnconsumedFeedEntriesFinder(final FeedEndpoint endpoint, final ConsumedFeedEntryStore consumedFeedEntryStore)
-    {
+    private final FeedEndpointFactory feedEndpointFactory;
 
-        this.endpoint = endpoint;
+    public UnconsumedFeedEntriesFinder(final FeedEndpointFactory feedEndpointFactory, final ConsumedFeedEntryStore consumedFeedEntryStore)
+    {
+        this.feedEndpointFactory = feedEndpointFactory;
         this.consumedFeedEntryStore = consumedFeedEntryStore;
         this.representationFactory = new DefaultRepresentationFactory();
     }
 
-    public List<ReadableRepresentation> findUnconsumed()
+    public List<ReadableRepresentation> findUnconsumed(final FeedEndpoint endpoint)
     {
         final ReadableRepresentation feedFirstPage = representationFactory.readRepresentation(endpoint.reader());
 
@@ -43,8 +43,7 @@ public class UnconsumedFeedEntriesFinder
 
         while (feedDetails.next.isPresent())
         {
-
-            final ReadableRepresentation nextPage = representationFactory.readRepresentation(endpoint.reader(feedDetails.next.get().getHref()));
+            final ReadableRepresentation nextPage = representationFactory.readRepresentation(reader(feedDetails));
             feedDetails = extractFeedDetailsFrom(nextPage);
             unconsumed.addAll(feedDetails.unconsumed);
         }
@@ -77,6 +76,11 @@ public class UnconsumedFeedEntriesFinder
     private boolean nextPageOfUnconsumedFeedsExists(final ReadableRepresentation readableRepresentation)
     {
         return !readableRepresentation.getLinksByRel(NEXT).isEmpty();
+    }
+
+    private Reader reader(final FeedDetails feedDetails)
+    {
+        return feedEndpointFactory.create(feedDetails.next.get().getHref()).reader();
     }
 
     private class FeedDetails
