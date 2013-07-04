@@ -16,11 +16,6 @@ public class FeedEndpoint
 
     private final Resty resty;
 
-    public FeedEndpoint(final String feedUrl)
-    {
-        this(feedUrl, new Resty());
-    }
-
     FeedEndpoint(final String feedUrl, final Resty resty)
     {
         this.feedUrl = feedUrl;
@@ -29,7 +24,6 @@ public class FeedEndpoint
 
     public Reader reader()
     {
-
         return reader(feedUrl);
     }
 
