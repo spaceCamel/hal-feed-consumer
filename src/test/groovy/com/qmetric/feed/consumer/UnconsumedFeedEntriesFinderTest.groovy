@@ -54,6 +54,21 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         unprocessedList.size() == 3
     }
 
+    def "should paginate to multiple pages"()
+    {
+        given:
+        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumedAndNextLink.json').openStream())
+        endpoint.reader() >> new InputStreamReader(this.getClass().getResource('/anotherFeedWithAllUnconsumedAndNextLink.json').openStream())
+        endpoint.reader(_) >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
+        consumedFeedEntryStore.notAlreadyConsumed(_) >>> [true, true, true, true, true, false]
+
+        when:
+        List<ReadableRepresentation> unprocessedList = store.findUnconsumed();
+
+        then:
+        unprocessedList.size() == 5
+    }
+
     def "should return none when feed has all consumed"()
     {
         given:
