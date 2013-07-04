@@ -1,16 +1,22 @@
 package com.qmetric.feed.consumer;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.theoryinpractise.halbuilder.DefaultRepresentationFactory;
+import com.theoryinpractise.halbuilder.api.Link;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
 
 import java.util.List;
 
+import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Lists.newArrayList;
 
 public class UnconsumedFeedEntriesFinder
 {
+
+    public static final String NEXT = "next";
+
     private final FeedEndpoint endpoint;
 
     private final ConsumedFeedEntryStore consumedFeedEntryStore;
@@ -33,14 +39,14 @@ public class UnconsumedFeedEntriesFinder
 
         FeedDetails feedDetails = extractFeedDetailsFrom(feedFirstPage);
 
-        unconsumed.addAll(feedDetails.getUnconsumed());
+        unconsumed.addAll(feedDetails.unconsumed);
 
-        while (feedDetails.getNext().isPresent())
+        while (feedDetails.next.isPresent())
         {
 
-            final ReadableRepresentation nextPage = representationFactory.readRepresentation(endpoint.reader(feedDetails.getNext().get()));
+            final ReadableRepresentation nextPage = representationFactory.readRepresentation(endpoint.reader(feedDetails.next.get().getHref()));
             feedDetails = extractFeedDetailsFrom(nextPage);
-            unconsumed.addAll(feedDetails.getUnconsumed());
+            unconsumed.addAll(feedDetails.unconsumed);
         }
 
         return unconsumed;
@@ -48,60 +54,41 @@ public class UnconsumedFeedEntriesFinder
 
     private FeedDetails extractFeedDetailsFrom(final ReadableRepresentation readableRepresentation)
     {
-        final List<ReadableRepresentation> unconsumed = newArrayList();
-        for (ReadableRepresentation entry : readableRepresentation.getResourcesByRel("entries"))
-        {
-            if (consumedFeedEntryStore.notAlreadyConsumed(entry))
-            {
-                unconsumed.add(0, entry);
-            }
-            else
-            {
-                return new FeedDetails(unconsumed, Optional.<String>absent());
-            }
-        }
+        final List<? extends ReadableRepresentation> allPageEntries = readableRepresentation.getResourcesByRel("entries");
 
-        return new FeedDetails(unconsumed, nextLink(readableRepresentation));
+        final List<? extends ReadableRepresentation> unconsumedPageEntries = from(allPageEntries).filter(new Predicate<ReadableRepresentation>()
+        {
+            public boolean apply(final ReadableRepresentation input)
+            {
+                return consumedFeedEntryStore.notAlreadyConsumed(input);
+            }
+        }).toImmutableList().reverse();
+
+        final Optional<Link> nextPageLink = allPageEntries.size() > unconsumedPageEntries.size() ? Optional.<Link>absent() : next(readableRepresentation);
+
+        return new FeedDetails(unconsumedPageEntries, nextPageLink);
     }
 
-    private Optional<String> nextLink(final ReadableRepresentation readableRepresentation)
+    private Optional<Link> next(final ReadableRepresentation readableRepresentation)
     {
-        if (nextPageOfUnconsumedFeedsExists(readableRepresentation))
-        {
-
-            return Optional.of(readableRepresentation.getLinksByRel("next").get(0).getHref());
-        }
-        else
-        {
-            return Optional.absent();
-        }
+        return nextPageOfUnconsumedFeedsExists(readableRepresentation) ? Optional.of(readableRepresentation.getLinksByRel(NEXT).get(0)) : Optional.<Link>absent();
     }
 
     private boolean nextPageOfUnconsumedFeedsExists(final ReadableRepresentation readableRepresentation)
     {
-        return !readableRepresentation.getLinksByRel("next").isEmpty();
+        return !readableRepresentation.getLinksByRel(NEXT).isEmpty();
     }
 
     private class FeedDetails
     {
-        private List<ReadableRepresentation> unconsumed;
+        List<? extends ReadableRepresentation> unconsumed;
 
-        private Optional<String> next;
+        Optional<Link> next;
 
-        FeedDetails(final List<ReadableRepresentation> unconsumed, final Optional<String> next)
+        FeedDetails(final List<? extends ReadableRepresentation> unconsumed, final Optional<Link> next)
         {
             this.unconsumed = unconsumed;
             this.next = next;
-        }
-
-        public Optional<String> getNext()
-        {
-            return next;
-        }
-
-        public List<ReadableRepresentation> getUnconsumed()
-        {
-            return unconsumed;
         }
     }
 }
