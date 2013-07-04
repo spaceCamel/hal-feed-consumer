@@ -6,18 +6,17 @@ import java.util.List;
 
 public class FeedConsumer
 {
-
     private final ConsumedFeedEntryStore consumedFeedEntryStore;
 
     private final ConsumerAction consumerAction;
 
     private final UnconsumedFeedEntriesFinder finder;
 
-    public FeedConsumer(final UnconsumedFeedEntriesFinder finder, final ConsumedFeedEntryStore consumedFeedEntryStore, final ConsumerAction consumerAction)
+    public FeedConsumer(final FeedEndpoint endpoint, final ConsumedFeedEntryStore consumedFeedEntryStore, final ConsumerAction consumerAction)
     {
-        this.finder = finder;
         this.consumedFeedEntryStore = consumedFeedEntryStore;
         this.consumerAction = consumerAction;
+        this.finder = new UnconsumedFeedEntriesFinder(endpoint, consumedFeedEntryStore);
     }
 
     public void consume()
