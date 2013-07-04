@@ -9,16 +9,16 @@
             {
                 "_links": {
                     "self": {
-                        "href": "http://feed/idOfNewestUnconsumed"
+                        "href": "http://feed/idOfNewUnconsumed"
                     }
                 },
-                "_id": "idOfNewestUnconsumed",
+                "_id": "idOfNewUnconsumed",
                 "_published": "24/05/2013 00:00:00"
             },
             {
                 "_links": {
                     "self": {
-                        "href": "http://feed/idOfOldestUnconsumed"
+                        "href": "http://feed/idOfOldConsumed"
                     }
                 },
                 "_id": "idOfOldestUnconsumed",

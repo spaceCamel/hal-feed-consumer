@@ -45,7 +45,7 @@ public class UnconsumedFeedEntriesFinder
         {
             final ReadableRepresentation nextPage = representationFactory.readRepresentation(reader(feedDetails));
             feedDetails = extractFeedDetailsFrom(nextPage);
-            unconsumed.addAll(feedDetails.unconsumed);
+            unconsumed.addAll(0, feedDetails.unconsumed);
         }
 
         return unconsumed;

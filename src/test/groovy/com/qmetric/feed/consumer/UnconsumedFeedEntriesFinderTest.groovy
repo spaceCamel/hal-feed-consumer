@@ -31,6 +31,8 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         unprocessedList.size() == 2
         assert unprocessedList.get(0).getValue("_id") == 'idOfOldestUnconsumed'
         assert unprocessedList.get(1).getValue("_id") == 'idOfNewestUnconsumed'
+
+
     }
 
     def "should return only unconsumed entries provided feed contains some unconsumed entries"()
@@ -60,6 +62,9 @@ class UnconsumedFeedEntriesFinderTest extends Specification
 
         then:
         unprocessedList.size() == 3
+        assert unprocessedList.get(0).getValue("_id") == 'idOfNewUnconsumed'
+        assert unprocessedList.get(1).getValue("_id") == 'idOfNewerUnconsumed'
+        assert unprocessedList.get(2).getValue("_id") == 'idOfNewestUnconsumed'
     }
 
     def "should paginate to multiple pages"()
@@ -77,6 +82,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
 
         then:
         unprocessedList.size() == 5
+
     }
 
     def "should return none when feed has all consumed"()

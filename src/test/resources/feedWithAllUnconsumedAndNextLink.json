@@ -21,10 +21,10 @@
             {
                 "_links": {
                     "self": {
-                        "href": "http://feed/idOfOldestUnconsumed"
+                        "href": "http://feed/idOfNewerUnconsumed"
                     }
                 },
-                "_id": "idOfOldestUnconsumed",
+                "_id": "idOfNewerUnconsumed",
                 "_published": "26/05/2013 00:00:00"
             }
         ]
