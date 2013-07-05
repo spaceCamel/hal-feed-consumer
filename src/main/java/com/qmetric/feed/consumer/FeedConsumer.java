@@ -24,7 +24,6 @@ public class FeedConsumer
 
     public void consume()
     {
-
         final List<ReadableRepresentation> unconsumed = finder.findUnconsumed(endpoint);
 
         for (final ReadableRepresentation feedEntry : unconsumed)

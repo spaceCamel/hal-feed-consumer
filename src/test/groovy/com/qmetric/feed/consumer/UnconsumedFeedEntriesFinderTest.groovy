@@ -3,8 +3,7 @@ package com.qmetric.feed.consumer
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation
 import spock.lang.Specification
 
-class UnconsumedFeedEntriesFinderTest extends Specification
-{
+class UnconsumedFeedEntriesFinderTest extends Specification {
 
     def firstPageEndpoint = Mock(FeedEndpoint)
 
@@ -31,8 +30,6 @@ class UnconsumedFeedEntriesFinderTest extends Specification
         unprocessedList.size() == 2
         assert unprocessedList.get(0).getValue("_id") == 'idOfOldestUnconsumed'
         assert unprocessedList.get(1).getValue("_id") == 'idOfNewestUnconsumed'
-
-
     }
 
     def "should return only unconsumed entries provided feed contains some unconsumed entries"()
@@ -71,7 +68,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification
     {
         given:
         firstPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumedAndNextLink.json').openStream())
-        feedEndpointFactory.create(_ as String) >>> [ secondPageEndpoint, thirdPageEndpoint]
+        feedEndpointFactory.create(_ as String) >>> [secondPageEndpoint, thirdPageEndpoint]
         secondPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/anotherFeedWithAllUnconsumedAndNextLink.json').openStream())
         thirdPageEndpoint.reader() >> new InputStreamReader(this.getClass().getResource('/feedWithSomeUnconsumed.json').openStream())
 
@@ -82,7 +79,6 @@ class UnconsumedFeedEntriesFinderTest extends Specification
 
         then:
         unprocessedList.size() == 5
-
     }
 
     def "should return none when feed has all consumed"()

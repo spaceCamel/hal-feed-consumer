@@ -2,8 +2,7 @@ package com.qmetric.feed.consumer
 
 import spock.lang.Specification
 
-class FeedConsumerTest extends Specification
-{
+class FeedConsumerTest extends Specification {
 
     def consumerAction = Mock(ConsumerAction)
 
@@ -24,7 +23,6 @@ class FeedConsumerTest extends Specification
 
         then:
         2 * consumerAction.process(_)
-
     }
 
     def "should markAsConsumed all entries returned by finder"()

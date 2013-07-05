@@ -2,8 +2,7 @@ package com.qmetric.feed.consumer
 
 import spock.lang.Specification
 
-class FeedEndpointFactoryTest extends Specification
-{
+class FeedEndpointFactoryTest extends Specification {
 
     def "should create FeedEndpoint using factory"()
     {
