@@ -42,7 +42,11 @@ public class FeedConsumerScheduler
             {
                 try
                 {
+                    LOG.info("attempting to consume feed");
+
                     consumer.consume();
+
+                    LOG.info("feed consumed successfully");
                 }
                 catch (final AlreadyConsumingException e)
                 {

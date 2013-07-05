@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import static us.monoid.web.Resty.Option.timeout;
-
 public class FeedEndpoint
 {
     private static final Logger LOG = LoggerFactory.getLogger(FeedEndpoint.class);
@@ -20,8 +18,7 @@ public class FeedEndpoint
 
     public FeedEndpoint(final String feedUrl)
     {
-        this.feedUrl = feedUrl;
-        this.resty = new Resty(timeout(60000));
+        this(feedUrl, RestyFactory.create());
     }
 
     public FeedEndpoint(final String feedUrl, final Resty resty)
@@ -36,7 +33,7 @@ public class FeedEndpoint
         {
             return new InputStreamReader(resty.text(feedUrl).stream());
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             LOG.error("Failed to connect to feed endpoint", e);
 

@@ -55,7 +55,7 @@ public class SimpleDBConsumedEntryStore implements ConsumedFeedEntryStore
             simpleDBClient.putAttributes(new PutAttributesRequest(domain, getId(feedEntry), ImmutableList
                     .of(new ReplaceableAttribute().withName(CONSUMING_DATE_ATTR).withValue(DATE_FORMATTER.print(now())).withReplace(true)), onlyIfNotAlreadyConsuming));
         }
-        catch (AmazonServiceException e)
+        catch (final AmazonServiceException e)
         {
             if (CONDITIONAL_CHECK_FAILED_ERROR_CODE.equalsIgnoreCase(e.getErrorCode()))
             {
