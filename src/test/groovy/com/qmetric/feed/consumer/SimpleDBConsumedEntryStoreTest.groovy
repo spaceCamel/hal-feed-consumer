@@ -1,5 +1,6 @@
 package com.qmetric.feed.consumer
 import com.amazonaws.services.simpledb.AmazonSimpleDB
+import com.amazonaws.services.simpledb.model.DeleteAttributesRequest
 import com.amazonaws.services.simpledb.model.Item
 import com.amazonaws.services.simpledb.model.PutAttributesRequest
 import com.amazonaws.services.simpledb.model.SelectResult
@@ -8,7 +9,7 @@ import spock.lang.Specification
 
 class SimpleDBConsumedEntryStoreTest extends Specification {
 
-    final feedEntryName = "1"
+    final feedEntryId = "1"
 
     final domain = "domain"
 
@@ -20,10 +21,48 @@ class SimpleDBConsumedEntryStoreTest extends Specification {
 
     final consumedEntryStore = new SimpleDBConsumedEntryStore(simpleDBClient, domain)
 
-    def "should store entry as being consumed"()
+    def "should store entry with consuming state only if not already consumed"()
     {
         given:
-        feedEntry.getValue("_id") >> feedEntryName
+        feedEntry.getValue("_id") >> feedEntryId
+
+        when:
+        consumedEntryStore.markAsConsuming(feedEntry)
+
+        then:
+        simpleDBClient.putAttributes(_) >> {
+            final request = (it[0] as PutAttributesRequest)
+
+            assert request.domainName == domain
+            assert request.itemName == feedEntryId
+            assert request.attributes.size() == 1
+            assert request.attributes.get(0).getName() == "consuming"
+            assert request.expected.name == "consuming" && !request.expected.exists
+        }
+    }
+
+    def "should revert entry as being in consuming state"()
+    {
+        given:
+        feedEntry.getValue("_id") >> feedEntryId
+
+        when:
+        consumedEntryStore.revertConsuming(feedEntry)
+
+        then:
+        simpleDBClient.deleteAttributes(_) >> {
+            final request = (it[0] as DeleteAttributesRequest)
+            assert request.domainName == domain
+            assert request.itemName == feedEntryId
+            assert request.attributes.size() == 1
+            assert request.attributes.get(0).getName() == "consuming"
+        }
+    }
+
+    def "should store entry with consumed state"()
+    {
+        given:
+        feedEntry.getValue("_id") >> feedEntryId
 
         when:
         consumedEntryStore.markAsConsumed(feedEntry)
@@ -33,7 +72,8 @@ class SimpleDBConsumedEntryStoreTest extends Specification {
             final request = (it[0] as PutAttributesRequest)
 
             assert request.domainName == domain
-            assert request.itemName == feedEntryName
+            assert request.itemName == feedEntryId
+            assert request.attributes.size() == 1
             assert request.attributes.get(0).getName() == "consumed"
         }
     }

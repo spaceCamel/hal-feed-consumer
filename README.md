@@ -5,6 +5,13 @@ HAL+JSON feed consumer
 
 Java library used to consume [HAL+JSON](http://stateless.co/hal_specification.html) feeds produced by [hal-feed-server](https://github.com/qmetric/hal-feed-server).
 
+Features
+---------
+
+* Guaranteed execution of feed entries in ascending publish date order
+* Supports multiple consumers - refer to [Competing consumer pattern](#competing-consumer-pattern) below
+
+
 Usage
 -----
 
@@ -44,14 +51,23 @@ Library available from [Maven central repository](http://search.maven.org/)
 </dependency>
 ```
 
+Competing consumer pattern
+--------------------------
+
+Supports the competing consumer pattern. Multiple consumers can read from the same feed and be configured with the same ConsumedFeedEntryStore.
+
+To guarantee feed entries are consumed in ascending publish date order, this implementation ensures only a single consumer can consume at any one time, concurrent processing of
+feed entries is avoided to preserve this guaranteed execution ordering. A consumer attempting to consume an entry that is already being consumed by another consumer, will be
+delayed until the other consumer has finished consuming that entry.
+
+Increasing the number of consumers is likely to increase the polling rate of the feed.
+
 
 Implementation limitations
 --------------------------
 
 There are currently some limitations with the current feed consumer implementation, described below:
 
-* Does not support the competing consumer pattern (yet). One consumer only per Amazon SimpleDB store.
-
-* On any error, the current feed consumption is aborted. Retry will occur on next scheduled feed check, starting from the feed entry where error occurred.
-  If error does not resolve over time, this will result in continuous error/ retry behaviour, with no other feed entries being consumed.
+* On any error, the current feed consumption is aborted. Retry will occur on the next scheduled feed check, starting from the feed entry where the error occurred.
+  If the error does not resolve over time, this will result in continuous error/ retry behaviour to consume the same entry, with no other entries being consumed.
 

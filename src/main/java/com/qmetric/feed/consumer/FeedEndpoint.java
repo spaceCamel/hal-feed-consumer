@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import static us.monoid.web.Resty.Option.timeout;
+
 public class FeedEndpoint
 {
     private static final Logger LOG = LoggerFactory.getLogger(FeedEndpoint.class);
@@ -16,7 +18,13 @@ public class FeedEndpoint
 
     private final Resty resty;
 
-    FeedEndpoint(final String feedUrl, final Resty resty)
+    public FeedEndpoint(final String feedUrl)
+    {
+        this.feedUrl = feedUrl;
+        this.resty = new Resty(timeout(60000));
+    }
+
+    public FeedEndpoint(final String feedUrl, final Resty resty)
     {
         this.feedUrl = feedUrl;
         this.resty = resty;
