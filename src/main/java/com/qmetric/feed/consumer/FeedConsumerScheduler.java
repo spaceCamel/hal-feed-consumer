@@ -44,7 +44,11 @@ public class FeedConsumerScheduler
                 {
                     consumer.consume();
                 }
-                catch (Exception e)
+                catch (final AlreadyConsumingException e)
+                {
+                    LOG.debug("Entry in feed already being consumed by another consumer...skipping", e);
+                }
+                catch (final Exception e)
                 {
                     LOG.error("Failed to consume feed", e);
                 }

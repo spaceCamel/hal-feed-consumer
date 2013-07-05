@@ -4,7 +4,7 @@ import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 
 public interface ConsumedFeedEntryStore
 {
-    void markAsConsuming(final ReadableRepresentation feedEntry);
+    void markAsConsuming(final ReadableRepresentation feedEntry) throws AlreadyConsumingException;
 
     void revertConsuming(final ReadableRepresentation feedEntry);
 

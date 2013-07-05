@@ -46,7 +46,7 @@ public class FeedConsumer
         }
     }
 
-    private void markAsConsuming(final ReadableRepresentation feedEntry)
+    private void markAsConsuming(final ReadableRepresentation feedEntry) throws AlreadyConsumingException
     {
         consumedFeedEntryStore.markAsConsuming(feedEntry);
     }

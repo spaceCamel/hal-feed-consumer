@@ -1,5 +1,6 @@
 package com.qmetric.feed.consumer;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDB;
 import com.amazonaws.services.simpledb.model.Attribute;
 import com.amazonaws.services.simpledb.model.CreateDomainRequest;
@@ -23,6 +24,8 @@ public class SimpleDBConsumedEntryStore implements ConsumedFeedEntryStore
 {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss");
 
+    private static final String CONDITIONAL_CHECK_FAILED_ERROR_CODE = "ConditionalCheckFailed";
+
     private static final String ID_PROPERTY = "_id";
 
     private static final String CONSUMED_DATE_ATTR = "consumed";
@@ -43,12 +46,26 @@ public class SimpleDBConsumedEntryStore implements ConsumedFeedEntryStore
         simpleDBClient.createDomain(new CreateDomainRequest(domain));
     }
 
-    @Override public void markAsConsuming(final ReadableRepresentation feedEntry)
+    @Override public void markAsConsuming(final ReadableRepresentation feedEntry) throws AlreadyConsumingException
     {
         final UpdateCondition onlyIfNotAlreadyConsuming = new UpdateCondition().withName(CONSUMING_DATE_ATTR).withExists(false);
 
-        simpleDBClient.putAttributes(new PutAttributesRequest(domain, getId(feedEntry), ImmutableList
-                .of(new ReplaceableAttribute().withName(CONSUMING_DATE_ATTR).withValue(DATE_FORMATTER.print(now())).withReplace(true)), onlyIfNotAlreadyConsuming));
+        try
+        {
+            simpleDBClient.putAttributes(new PutAttributesRequest(domain, getId(feedEntry), ImmutableList
+                    .of(new ReplaceableAttribute().withName(CONSUMING_DATE_ATTR).withValue(DATE_FORMATTER.print(now())).withReplace(true)), onlyIfNotAlreadyConsuming));
+        }
+        catch (AmazonServiceException e)
+        {
+            if (CONDITIONAL_CHECK_FAILED_ERROR_CODE.equalsIgnoreCase(e.getErrorCode()))
+            {
+                throw new AlreadyConsumingException(e);
+            }
+            else
+            {
+                throw e;
+            }
+        }
     }
 
     @Override public void revertConsuming(final ReadableRepresentation feedEntry)

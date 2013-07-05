@@ -1,4 +1,6 @@
 package com.qmetric.feed.consumer
+
+import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.simpledb.AmazonSimpleDB
 import com.amazonaws.services.simpledb.model.DeleteAttributesRequest
 import com.amazonaws.services.simpledb.model.Item
@@ -39,6 +41,23 @@ class SimpleDBConsumedEntryStoreTest extends Specification {
             assert request.attributes.get(0).getName() == "consuming"
             assert request.expected.name == "consuming" && !request.expected.exists
         }
+    }
+
+    def "should throw AlreadyConsumingException when attempting to set consuming state for entry already being consumed by another consumer"()
+    {
+        given:
+        feedEntry.getValue("_id") >> feedEntryId
+        simpleDBClient.putAttributes(_) >> {
+            final error = new AmazonServiceException("Conditional check failed. Attribute (consuming) value exists")
+            error.setErrorCode("ConditionalCheckFailed")
+            throw error
+        }
+
+        when:
+        consumedEntryStore.markAsConsuming(feedEntry)
+
+        then:
+        thrown(AlreadyConsumingException)
     }
 
     def "should revert entry as being in consuming state"()
