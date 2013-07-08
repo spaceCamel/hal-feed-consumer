@@ -1,5 +1,6 @@
 package com.qmetric.feed.consumer
 
+import com.google.common.base.Optional
 import spock.lang.Specification
 
 import java.util.concurrent.ScheduledExecutorService
@@ -17,6 +18,7 @@ class FeedConsumerSchedulerTest extends Specification {
 
     final scheduler = new FeedConsumerScheduler(consumer, interval, timeUnitOfInterval, schedulerExecutionService)
 
+
     def "should periodically consume feed"()
     {
         when:
@@ -24,5 +26,27 @@ class FeedConsumerSchedulerTest extends Specification {
 
         then:
         1 * schedulerExecutionService.scheduleAtFixedRate(_, 0, interval, timeUnitOfInterval)
+    }
+
+    def "should update lastConsumed when consume operation was successful"()
+    {
+        when:
+        scheduler.consume()
+
+        then:
+        1 * consumer.consume()
+        assert scheduler.getStatus().getLastConsumed() != Optional.absent()
+    }
+
+    def "should return lastConsumed as null if consume action failed"()
+    {
+        given:
+        consumer.consume() >> { throw new Exception("Mock exception")}
+
+        when:
+        scheduler.consume()
+
+        then:
+        assert scheduler.getStatus().getLastConsumed() == Optional.absent()
     }
 }
