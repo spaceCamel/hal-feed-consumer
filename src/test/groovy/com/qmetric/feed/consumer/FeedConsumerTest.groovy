@@ -54,15 +54,16 @@ class FeedConsumerTest extends Specification {
     {
         given:
         consumedFeedEntryStore.notAlreadyConsumed(_) >> true
-        consumedFeedEntryStore.markAsConsuming(_) >> { throw new Exception() }
+        consumedFeedEntryStore.markAsConsuming(_) >> { throw new AlreadyConsumingException() }
 
         when:
         consumer.consume()
 
         then:
-        0 * consumedFeedEntryStore.markAsConsumed(_) >> { throw new Exception() }
+        0 * consumerAction.process(_)
         0 * consumedFeedEntryStore.markAsConsumed(_)
-        thrown(Exception)
+        0 * consumedFeedEntryStore.revertConsuming(_)
+        thrown(AlreadyConsumingException)
 
     }
 
