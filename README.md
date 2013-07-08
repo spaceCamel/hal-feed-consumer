@@ -56,11 +56,11 @@ Competing consumer pattern
 
 Supports the competing consumer pattern. Multiple consumers can read from the same feed and be configured with the same ConsumedFeedEntryStore.
 
-To guarantee feed entries are consumed in ascending publish date order, this implementation ensures only a single consumer can consume at any one time, concurrent processing of
-feed entries is avoided to preserve this guaranteed execution ordering. A consumer attempting to consume an entry that is already being consumed by another consumer, will be
+To guarantee feed entries are consumed in ascending publish date order. This implementation ensures only a single consumer can consume at any one time - concurrent processing of
+feed entries is avoided to preserve the guaranteed execution ordering. A consumer attempting to consume an entry that is already being consumed by another consumer, will be
 delayed until the other consumer has finished consuming that entry.
 
-Increasing the number of consumers is likely to increase the polling rate of the feed.
+The main advantage for configuring multiple consumers is for failover. Increase to throughput is likely to be minimal, although feed polling rates may be more frequent.
 
 
 Implementation limitations
