@@ -1,11 +1,11 @@
 package com.qmetric.feed.consumer;
 
-import com.google.common.base.Optional;
-import org.joda.time.DateTime;
+import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.EventListener;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -23,18 +23,20 @@ public class FeedConsumerScheduler implements EventListener
 
     private final ScheduledExecutorService scheduledExecutorService;
 
-    private ConsumeActionStatus status = new ConsumeActionStatus(Optional.<DateTime>absent());
+    private final ConsumeActionListener[] consumerActionListeners;
 
-    public FeedConsumerScheduler(final FeedConsumer consumer, final long interval, final TimeUnit intervalUnit)
+    public FeedConsumerScheduler(final FeedConsumer consumer, final long interval, final TimeUnit intervalUnit, final ConsumeActionListener... listeners)
     {
-        this(consumer, interval, intervalUnit, newSingleThreadScheduledExecutor());
+        this(consumer, interval, intervalUnit, newSingleThreadScheduledExecutor(), listeners);
     }
 
-    FeedConsumerScheduler(final FeedConsumer consumer, final long interval, final TimeUnit intervalUnit, final ScheduledExecutorService scheduledExecutorService)
+    FeedConsumerScheduler(final FeedConsumer consumer, final long interval, final TimeUnit intervalUnit, final ScheduledExecutorService scheduledExecutorService,
+                          final ConsumeActionListener... listeners)
     {
         this.consumer = consumer;
         this.interval = interval;
         this.intervalUnit = intervalUnit;
+        this.consumerActionListeners = listeners;
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
@@ -45,28 +47,29 @@ public class FeedConsumerScheduler implements EventListener
             @Override
             public void run()
             {
-                consume();
+                try
+                {
+                    LOG.info("attempting to consume feed");
+                    final List<ReadableRepresentation> consumedEntries = consumer.consume();
+                    notifyAllListeners(consumedEntries);
+                    System.out.println("Waiting");
+                    Thread.sleep(180000);
+                    System.out.println("Waiting finished");
+                    LOG.info("feed consumed successfully");
+                }
+                catch (Exception e)
+                {
+                    LOG.error("Failed to consume feed", e);
+                }
             }
         }, 0, interval, intervalUnit);
     }
 
-    void consume()
+    private void notifyAllListeners(final List<ReadableRepresentation> consumedEntries)
     {
-        try
+        for (final ConsumeActionListener listener : consumerActionListeners)
         {
-            LOG.info("attempting to consume feed");
-            consumer.consume();
-            status = new ConsumeActionStatus(Optional.of(DateTime.now()));
-            LOG.info("feed consumed successfully");
+            listener.consumed(consumedEntries);
         }
-        catch (Exception e)
-        {
-            LOG.error("Failed to consume feed", e);
-        }
-    }
-
-    public ConsumeActionStatus getStatus()
-    {
-        return status;
     }
 }
