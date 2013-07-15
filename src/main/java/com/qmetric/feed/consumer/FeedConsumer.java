@@ -4,6 +4,7 @@ import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.RetryerBuilder;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -34,9 +35,10 @@ public class FeedConsumer
         this.finder = new UnconsumedFeedEntriesFinder(new FeedEndpointFactory(), consumedFeedEntryStore);
     }
 
-    public void consume() throws Exception
+    public List<ReadableRepresentation> consume() throws Exception
     {
-        for (final ReadableRepresentation feedEntry : finder.findUnconsumed(endpoint))
+        final List<ReadableRepresentation> entries = finder.findUnconsumed(endpoint);
+        for (final ReadableRepresentation feedEntry : entries)
         {
             markAsConsuming(feedEntry);
 
@@ -44,6 +46,7 @@ public class FeedConsumer
 
             markAsConsumed(feedEntry);
         }
+        return entries;
     }
 
     private void markAsConsuming(final ReadableRepresentation feedEntry) throws AlreadyConsumingException
