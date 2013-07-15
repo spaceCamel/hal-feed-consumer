@@ -17,13 +17,13 @@ import static com.codahale.metrics.health.HealthCheck.Result.unhealthy;
 public class ServicePerformanceHealthCheck extends HealthCheck implements ConsumeActionListener
 {
 
-    public static final int MULTIPLIER = 2;
-
     private final static DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormat.fullDateTime();
+
+    private static final int MULTIPLIER = 2;
 
     private final Duration tolerableDelay;
 
-    private Optional<DateTime> lastConsumed;
+    private Optional<DateTime> lastConsumed = Optional.absent();
 
     public ServicePerformanceHealthCheck(final long interval, final TimeUnit intervalUnit)
     {
@@ -38,15 +38,18 @@ public class ServicePerformanceHealthCheck extends HealthCheck implements Consum
         }
         else
         {
-            final Duration durationBetweenLastConsumed = new Duration(lastConsumed.get(), DateTime.now());
-
-            return durationBetweenLastConsumed.isShorterThan(tolerableDelay) ? healthyResult() : unhealthyResult();
+            return durationBetweenLastConsumed().isShorterThan(tolerableDelay) ? healthyResult() : unhealthyResult();
         }
     }
 
     @Override public void consumed(final List<ReadableRepresentation> consumedEntries)
     {
         this.lastConsumed = Optional.of(DateTime.now());
+    }
+
+    private Duration durationBetweenLastConsumed()
+    {
+        return new Duration(lastConsumed.get(), DateTime.now());
     }
 
     private Result unhealthyResult()

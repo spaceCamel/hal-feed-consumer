@@ -1,6 +1,7 @@
 package com.qmetric.feed.consumer;
 
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +53,6 @@ public class FeedConsumerScheduler implements EventListener
                     LOG.info("attempting to consume feed");
                     final List<ReadableRepresentation> consumedEntries = consumer.consume();
                     notifyAllListeners(consumedEntries);
-                    System.out.println("Waiting");
-                    Thread.sleep(180000);
-                    System.out.println("Waiting finished");
                     LOG.info("feed consumed successfully");
                 }
                 catch (Exception e)
