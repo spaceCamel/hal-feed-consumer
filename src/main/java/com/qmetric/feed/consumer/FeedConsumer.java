@@ -27,14 +27,16 @@ public class FeedConsumer
         this.representationFactory = new DefaultRepresentationFactory();
     }
 
-    public void consume()
+    public List<ReadableRepresentation> consume()
     {
-        for (final ReadableRepresentation feedEntry : takeWhileUnconsumed(representationFactory.readRepresentation(endpoint.reader()).getResourcesByRel("entries")))
+        final List<ReadableRepresentation> entries = takeWhileUnconsumed(representationFactory.readRepresentation(endpoint.reader()).getResourcesByRel("entries"));
+        for (final ReadableRepresentation feedEntry : entries)
         {
             consumerAction.process(feedEntry);
 
             consumedFeedEntryStore.markAsConsumed(feedEntry);
         }
+        return entries;
     }
 
     private List<ReadableRepresentation> takeWhileUnconsumed(final List<? extends ReadableRepresentation> feedEntries)

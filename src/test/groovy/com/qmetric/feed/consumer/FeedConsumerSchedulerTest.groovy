@@ -1,12 +1,12 @@
 package com.qmetric.feed.consumer
 
-import com.google.common.base.Optional
 import spock.lang.Specification
 
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-class FeedConsumerSchedulerTest extends Specification {
+class FeedConsumerSchedulerTest extends Specification
+{
 
     final timeUnitOfInterval = TimeUnit.MINUTES
 
@@ -15,6 +15,8 @@ class FeedConsumerSchedulerTest extends Specification {
     final schedulerExecutionService = Mock(ScheduledExecutorService)
 
     final consumer = Mock(FeedConsumer)
+
+    final consumeActionListener = Mock(ConsumeActionListener)
 
     final scheduler = new FeedConsumerScheduler(consumer, interval, timeUnitOfInterval, schedulerExecutionService)
 
@@ -28,25 +30,16 @@ class FeedConsumerSchedulerTest extends Specification {
         1 * schedulerExecutionService.scheduleAtFixedRate(_, 0, interval, timeUnitOfInterval)
     }
 
-    def "should update lastConsumed when consume operation was successful"()
-    {
-        when:
-        scheduler.consume()
-
-        then:
-        1 * consumer.consume()
-        assert scheduler.getStatus().getLastConsumed() != Optional.absent()
-    }
-
-    def "should return lastConsumed as null if consume action failed"()
+    def "should notify consumer upon consume"()
     {
         given:
-        consumer.consume() >> { throw new Exception("Mock exception")}
+        final scheduler = new FeedConsumerScheduler(consumer, interval, timeUnitOfInterval, schedulerExecutionService, consumeActionListener)
 
         when:
-        scheduler.consume()
+        scheduler.consumeAndNotifyListeners()
 
         then:
-        assert scheduler.getStatus().getLastConsumed() == Optional.absent()
+        1 * consumeActionListener.consumed(_)
+
     }
 }
