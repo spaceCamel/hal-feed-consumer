@@ -78,7 +78,7 @@ Health check
 Build-in health check is available using [codahale metrics](http://metrics.codahale.com/), configure your scheduler as follows:
 
 ```java
-# Create health check with an expected minimum duration between feed consumptions. If the feed isn't consumed within this duration, then the check will return unhealthy.
+// Create health check with an expected minimum duration between feed consumptions. If the feed isn't consumed within this duration, then the check will return unhealthy.
 final ServicePerformanceHealthCheck healthCheck = new ServicePerformanceHealthCheck(15, MINUTES);
 
 new FeedConsumerScheduler(consumer, 1, MINUTES, healthCheck).start();
