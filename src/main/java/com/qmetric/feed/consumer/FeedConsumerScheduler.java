@@ -47,28 +47,31 @@ public class FeedConsumerScheduler implements EventListener
             @Override
             public void run()
             {
-                try
-                {
-                    LOG.info("attempting to consume feed");
-                    consumeAndNotifyListeners();
-                    LOG.info("feed consumed successfully");
-                }
-                catch (final AlreadyConsumingException e)
-                {
-                    LOG.debug("Entry in feed already being consumed by another consumer...skipping", e);
-                }
-                catch (final Exception e)
-                {
-                    LOG.error("Failed to consume feed", e);
-                }
+                consume();
             }
         }, 0, interval, intervalUnit);
     }
 
-    private void consumeAndNotifyListeners() throws Exception
+    private void consume()
     {
-        final List<ReadableRepresentation> consumedEntries = consumer.consume();
-        notifyAllListeners(consumedEntries);
+        try
+        {
+            LOG.info("attempting to consume feed");
+
+            final List<ReadableRepresentation> consumedEntries = consumer.consume();
+
+            notifyAllListeners(consumedEntries);
+
+            LOG.info("feed consumed successfully");
+        }
+        catch (final AlreadyConsumingException e)
+        {
+            LOG.debug("Entry in feed already being consumed by another consumer...skipping", e);
+        }
+        catch (final Exception e)
+        {
+            LOG.error("Failed to consume feed", e);
+        }
     }
 
     private void notifyAllListeners(final List<ReadableRepresentation> consumedEntries)

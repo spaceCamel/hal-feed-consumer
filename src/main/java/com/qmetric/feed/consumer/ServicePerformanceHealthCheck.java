@@ -16,10 +16,9 @@ import static com.codahale.metrics.health.HealthCheck.Result.unhealthy;
 
 public class ServicePerformanceHealthCheck extends HealthCheck implements ConsumeActionListener
 {
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormat.fullDateTime();
 
-    private final static DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormat.fullDateTime();
-
-    private static final int MULTIPLIER = 2;
+    private final DateTimeSource dateTimeSource;
 
     private final Duration tolerableDelay;
 
@@ -27,34 +26,40 @@ public class ServicePerformanceHealthCheck extends HealthCheck implements Consum
 
     public ServicePerformanceHealthCheck(final long interval, final TimeUnit intervalUnit)
     {
-        this.tolerableDelay = new Duration(intervalUnit.toMillis(interval) * MULTIPLIER);
+        this(interval, intervalUnit, new DateTimeSource());
     }
 
-    @Override protected HealthCheck.Result check() throws Exception
+    ServicePerformanceHealthCheck(final long interval, final TimeUnit intervalUnit, DateTimeSource dateTimeSource)
     {
-        if (!lastConsumed.isPresent())
-        {
-            return unhealthy(new ConsumerTimeoutException("The consumer has never finished successfully"));
-        }
-        else
-        {
-            return durationBetweenLastConsumed().isShorterThan(tolerableDelay) ? healthyResult() : unhealthyResult();
-        }
+        this.tolerableDelay = new Duration(intervalUnit.toMillis(interval));
+        this.dateTimeSource = dateTimeSource;
     }
 
-    @Override public void consumed(final List<ReadableRepresentation> consumedEntries)
+    @Override protected synchronized HealthCheck.Result check() throws Exception
     {
-        this.lastConsumed = Optional.of(DateTime.now());
+        return  !lastConsumed.isPresent() || durationSinceLastConsumedIsLongerThanTolerableDelay() ? unhealthyResult() : healthyResult();
     }
 
-    private Duration durationBetweenLastConsumed()
+    @Override public synchronized void consumed(final List<ReadableRepresentation> consumedEntries)
     {
-        return new Duration(lastConsumed.get(), DateTime.now());
+        this.lastConsumed = Optional.of(dateTimeSource.now());
+    }
+
+    private boolean durationSinceLastConsumedIsLongerThanTolerableDelay()
+    {
+        return new Duration(lastConsumed.get(), dateTimeSource.now()).isLongerThan(tolerableDelay);
     }
 
     private Result unhealthyResult()
     {
-        return unhealthy(String.format("The feed is not responding since %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
+        if (lastConsumed.isPresent())
+        {
+            return unhealthy(String.format("The feed has not been consumed since %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
+        }
+        else
+        {
+            return unhealthy("The feed has never been consumed");
+        }
     }
 
     private Result healthyResult()
@@ -62,11 +67,11 @@ public class ServicePerformanceHealthCheck extends HealthCheck implements Consum
         return healthy(String.format("The last time consume operation was successfully completed at %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
     }
 
-    private class ConsumerTimeoutException extends Exception
+    static class DateTimeSource
     {
-        public ConsumerTimeoutException(String message)
+        DateTime now()
         {
-            super(message);
+            return DateTime.now();
         }
     }
 }

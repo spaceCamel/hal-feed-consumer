@@ -7,7 +7,7 @@ class FeedEndpointFactoryTest extends Specification {
     def "should create FeedEndpoint using factory"()
     {
         given:
-        def feedEndpointFactory = new FeedEndpointFactory();
+        def feedEndpointFactory = new FeedEndpointFactory()
 
         when:
         FeedEndpoint feedEndpoint = feedEndpointFactory.create("any_url")

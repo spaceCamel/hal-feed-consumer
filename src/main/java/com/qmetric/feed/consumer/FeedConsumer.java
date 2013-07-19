@@ -38,6 +38,7 @@ public class FeedConsumer
     public List<ReadableRepresentation> consume() throws Exception
     {
         final List<ReadableRepresentation> entries = finder.findUnconsumed(endpoint);
+
         for (final ReadableRepresentation feedEntry : entries)
         {
             markAsConsuming(feedEntry);

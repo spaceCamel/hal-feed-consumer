@@ -71,3 +71,15 @@ There are currently some limitations with the current feed consumer implementati
 * On any error, the current feed consumption is aborted. Retry will occur on the next scheduled feed check, starting from the feed entry where the error occurred.
   If the error does not resolve over time, this will result in continuous error/ retry behaviour to consume the same entry, with no other entries being consumed.
 
+
+Health check
+-------------
+
+Build-in health check is available using [codahale metrics](http://metrics.codahale.com/), configure your scheduler as follows:
+
+```java
+# Create health check with an expected minimum duration between feed consumptions. If the feed isn't consumed within this duration, then the check will return unhealthy.
+final ServicePerformanceHealthCheck healthCheck = new ServicePerformanceHealthCheck(15, MINUTES);
+
+new FeedConsumerScheduler(consumer, 1, MINUTES, healthCheck).start();
+```

@@ -1,81 +1,75 @@
 package com.qmetric.feed.consumer
 
-import com.google.common.base.Optional
 import org.joda.time.DateTime
-import org.joda.time.Duration
 import spock.lang.Specification
+import spock.lang.Unroll
 
-import java.util.concurrent.TimeUnit
+import static java.util.concurrent.TimeUnit.MINUTES
+import static java.util.concurrent.TimeUnit.SECONDS
 
-class ServicePerformanceHealthCheckTest extends Specification
-{
-    final scheduler = Mock(FeedConsumerScheduler)
+class ServicePerformanceHealthCheckTest extends Specification {
 
-    final now = DateTime.now();
+    final testDates = new TestDates([])
 
-    final threeMinsBeforeNow = now.minusMinutes(3)
+    final dateTimeSource = Mock(ServicePerformanceHealthCheck.DateTimeSource)
 
-    final thirtySecondsBeforeNow = now.minusSeconds(30)
-
-    def "tolerable delay is set to double the interval passed"()
-    {
-        when:
-        final healthCheck = new ServicePerformanceHealthCheck(1, TimeUnit.MINUTES)
-
-        then:
-        assert healthCheck.tolerableDelay == Duration.standardMinutes(2)
-    }
-
-    def "Returns unhealthy result if feed was never consumed"()
+    def "should be unhealthy if feed was never consumed"()
     {
         given:
-        final healthCheck = new ServicePerformanceHealthCheck(1, TimeUnit.MINUTES)
-        healthCheck.lastConsumed = Optional.absent()
+        final healthCheck = new ServicePerformanceHealthCheck(1, MINUTES)
 
         when:
         final result = healthCheck.check()
 
         then:
-        result.isHealthy() == false
+        !result.isHealthy()
     }
 
-    def "Returns unhealthy result if feed was not consumed for time more than tolerable delay"()
+    @Unroll def "should be unhealthy if feed has not been consumed within the tolerable delay"()
     {
         given:
-        final healthCheck = new ServicePerformanceHealthCheck(1, TimeUnit.MINUTES)
-        healthCheck.lastConsumed = Optional.of(threeMinsBeforeNow)
+        final healthCheck = new ServicePerformanceHealthCheck(interval, intervalUnit, dateTimeSource)
+        dateTimeSource.now() >>> testDates.lastConsumed(lastConsumedDate).currentDate(currentDate).get()
+        healthCheck.consumed(_)
 
         when:
         final result = healthCheck.check()
 
         then:
-        result.isHealthy() == false
+        result.isHealthy() == expectedHealthyResult
+
+        where:
+        interval | intervalUnit | lastConsumedDate                      | currentDate                             | expectedHealthyResult
+        1        | MINUTES      | new DateTime(2013, 7, 19, 0, 0, 0, 0) | new DateTime(2013, 7, 19, 0, 1, 0, 0)   | true
+        1        | MINUTES      | new DateTime(2013, 7, 19, 0, 0, 0, 0) | new DateTime(2013, 7, 19, 0, 0, 59, 59) | true
+        1        | MINUTES      | new DateTime(2013, 7, 19, 0, 0, 0, 0) | new DateTime(2013, 7, 19, 0, 1, 0, 1)   | false
+        1        | SECONDS      | new DateTime(2013, 7, 19, 0, 0, 0, 0) | new DateTime(2013, 7, 19, 0, 0, 1, 0)   | true
+        1        | SECONDS      | new DateTime(2013, 7, 19, 0, 0, 0, 0) | new DateTime(2013, 7, 19, 0, 0, 2, 0)   | false
     }
 
-    def "Returns healthy result if feed consumed before tolerable delay has elapsed"()
-    {
-        given:
-        final healthCheck = new ServicePerformanceHealthCheck(1, TimeUnit.MINUTES);
-        healthCheck.lastConsumed = Optional.of(thirtySecondsBeforeNow);
+    private class TestDates {
+        final dates = []
 
-        when:
-        final result = healthCheck.check()
+        private TestDates(dates)
+        {
+            this.dates = dates
+        }
 
-        then:
-        result.isHealthy() == true
-    }
+        def lastConsumed(final dateTime)
+        {
+            dates.add(dateTime)
+            return new TestDates(dates)
+        }
 
-    def "Works with other time units"()
-    {
-        given:
-        final healthCheck = new ServicePerformanceHealthCheck(60, TimeUnit.SECONDS);
-        healthCheck.lastConsumed = Optional.of(thirtySecondsBeforeNow)
+        def currentDate(final dateTime)
+        {
+            dates.add(dateTime)
+            return new TestDates(dates)
+        }
 
-        when:
-        final result = healthCheck.check()
-
-        then:
-        result.isHealthy() == true
-
+        def get()
+        {
+            dates
+        }
     }
 }
