@@ -7,17 +7,13 @@ import java.util.concurrent.TimeUnit
 
 class FeedConsumerSchedulerTest extends Specification {
 
-    final timeUnitOfInterval = TimeUnit.MINUTES
-
-    final interval = 1
+    final interval = new Interval(1, TimeUnit.MINUTES)
 
     final schedulerExecutionService = Mock(ScheduledExecutorService)
 
-    final consumer = Mock(FeedConsumer)
+    final consumer = Mock(FeedConsumerImpl)
 
-    final consumeActionListener = Mock(ConsumeActionListener)
-
-    final scheduler = new FeedConsumerScheduler(consumer, interval, timeUnitOfInterval, schedulerExecutionService)
+    final scheduler = new FeedConsumerScheduler(consumer, interval, schedulerExecutionService)
 
     def "should periodically consume feed"()
     {
@@ -25,27 +21,12 @@ class FeedConsumerSchedulerTest extends Specification {
         scheduler.start()
 
         then:
-        1 * schedulerExecutionService.scheduleAtFixedRate(_, 0, interval, timeUnitOfInterval)
+        1 * schedulerExecutionService.scheduleAtFixedRate(_, 0, interval.time, interval.unit)
     }
 
-    def "should notify consumer upon consume"()
+    def "should catch any exception when consuming feed"()
     {
         given:
-        final scheduler = new FeedConsumerScheduler(consumer, interval, timeUnitOfInterval, schedulerExecutionService, consumeActionListener)
-
-        //noinspection GroovyAccessibility
-        when:
-        scheduler.consume()
-
-        then:
-        1 * consumer.consume()
-        1 * consumeActionListener.consumed(_)
-    }
-
-    def "should catch any exception"()
-    {
-        given:
-        final scheduler = new FeedConsumerScheduler(consumer, interval, timeUnitOfInterval, schedulerExecutionService, consumeActionListener)
         consumer.consume() >> { throw new Exception() }
 
         //noinspection GroovyAccessibility

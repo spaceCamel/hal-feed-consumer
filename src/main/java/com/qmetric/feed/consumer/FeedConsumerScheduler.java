@@ -1,42 +1,32 @@
 package com.qmetric.feed.consumer;
 
-import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
+import com.qmetric.feed.consumer.store.AlreadyConsumingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.EventListener;
-import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
-public class FeedConsumerScheduler implements EventListener
+public class FeedConsumerScheduler
 {
     private static final Logger LOG = LoggerFactory.getLogger(FeedConsumerScheduler.class);
 
     private final FeedConsumer consumer;
 
-    private final long interval;
-
-    private final TimeUnit intervalUnit;
+    private final Interval interval;
 
     private final ScheduledExecutorService scheduledExecutorService;
 
-    private final ConsumeActionListener[] consumerActionListeners;
-
-    public FeedConsumerScheduler(final FeedConsumer consumer, final long interval, final TimeUnit intervalUnit, final ConsumeActionListener... listeners)
+    public FeedConsumerScheduler(final FeedConsumer consumer, final Interval interval)
     {
-        this(consumer, interval, intervalUnit, newSingleThreadScheduledExecutor(), listeners);
+        this(consumer, interval, newSingleThreadScheduledExecutor());
     }
 
-    FeedConsumerScheduler(final FeedConsumer consumer, final long interval, final TimeUnit intervalUnit, final ScheduledExecutorService scheduledExecutorService,
-                          final ConsumeActionListener... listeners)
+    FeedConsumerScheduler(final FeedConsumer consumer, final Interval interval, final ScheduledExecutorService scheduledExecutorService)
     {
         this.consumer = consumer;
         this.interval = interval;
-        this.intervalUnit = intervalUnit;
-        this.consumerActionListeners = listeners;
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
@@ -49,36 +39,26 @@ public class FeedConsumerScheduler implements EventListener
             {
                 consume();
             }
-        }, 0, interval, intervalUnit);
+        }, 0, interval.time, interval.unit);
     }
 
     private void consume()
     {
         try
         {
-            LOG.info("attempting to consume feed");
+            LOG.info("Attempting to consume feed");
 
-            final List<ReadableRepresentation> consumedEntries = consumer.consume();
+            consumer.consume();
 
-            notifyAllListeners(consumedEntries);
-
-            LOG.info("feed consumed successfully");
+            LOG.info("Feed consumed successfully");
         }
         catch (final AlreadyConsumingException e)
         {
-            LOG.debug("Entry in feed already being consumed by another consumer...skipping", e);
+            LOG.info("Entry in feed already being consumed by another consumer...skipping");
         }
         catch (final Exception e)
         {
             LOG.error("Failed to consume feed", e);
-        }
-    }
-
-    private void notifyAllListeners(final List<ReadableRepresentation> consumedEntries)
-    {
-        for (final ConsumeActionListener listener : consumerActionListeners)
-        {
-            listener.consumed(consumedEntries);
         }
     }
 }

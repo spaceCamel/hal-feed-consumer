@@ -1,15 +1,12 @@
-package com.qmetric.feed.consumer
+package com.qmetric.feed.consumer.store
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.simpledb.AmazonSimpleDB
-import com.amazonaws.services.simpledb.model.DeleteAttributesRequest
-import com.amazonaws.services.simpledb.model.Item
-import com.amazonaws.services.simpledb.model.PutAttributesRequest
-import com.amazonaws.services.simpledb.model.SelectResult
+import com.amazonaws.services.simpledb.model.*
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation
 import spock.lang.Specification
 
-class SimpleDBConsumedEntryStoreTest extends Specification {
+class SimpleDBConsumedStoreTest extends Specification {
 
     final feedEntryId = "1"
 
@@ -21,7 +18,7 @@ class SimpleDBConsumedEntryStoreTest extends Specification {
 
     final simpleDBClient = Mock(AmazonSimpleDB)
 
-    final consumedEntryStore = new SimpleDBConsumedEntryStore(simpleDBClient, domain)
+    final consumedEntryStore = new SimpleDBConsumedStore(simpleDBClient, domain)
 
     def "should store entry with consuming state only if not already consumed"()
     {
@@ -121,5 +118,26 @@ class SimpleDBConsumedEntryStoreTest extends Specification {
 
         then:
         notConsumedResult
+    }
+
+    def "should know when connectivity to store is healthy"()
+    {
+        when:
+        consumedEntryStore.checkConnectivity()
+
+        then:
+        notThrown(ConnectivityException)
+    }
+
+    def "should know when connectivity to store is unhealthy"()
+    {
+        given:
+        simpleDBClient.domainMetadata(new DomainMetadataRequest(domain)) >> { throw new Exception() }
+
+        when:
+        consumedEntryStore.checkConnectivity()
+
+        then:
+        thrown(ConnectivityException)
     }
 }

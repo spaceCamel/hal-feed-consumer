@@ -2,7 +2,7 @@ package com.qmetric.feed.consumer;
 
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 
-public interface ConsumerAction
+public interface EntryConsumerListener
 {
-    void process(ReadableRepresentation feedEntry);
+    void consumed(final ReadableRepresentation consumedEntry);
 }

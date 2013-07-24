@@ -1,10 +1,11 @@
-package com.qmetric.feed.consumer;
+package com.qmetric.feed.consumer.store;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDB;
 import com.amazonaws.services.simpledb.model.Attribute;
 import com.amazonaws.services.simpledb.model.CreateDomainRequest;
 import com.amazonaws.services.simpledb.model.DeleteAttributesRequest;
+import com.amazonaws.services.simpledb.model.DomainMetadataRequest;
 import com.amazonaws.services.simpledb.model.Item;
 import com.amazonaws.services.simpledb.model.PutAttributesRequest;
 import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
@@ -20,7 +21,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static java.lang.String.format;
 import static org.joda.time.DateTime.now;
 
-public class SimpleDBConsumedEntryStore implements ConsumedFeedEntryStore
+public class SimpleDBConsumedStore implements ConsumedStore
 {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss");
 
@@ -38,12 +39,24 @@ public class SimpleDBConsumedEntryStore implements ConsumedFeedEntryStore
 
     private final String domain;
 
-    public SimpleDBConsumedEntryStore(final AmazonSimpleDB simpleDBClient, final String domain)
+    public SimpleDBConsumedStore(final AmazonSimpleDB simpleDBClient, final String domain)
     {
         this.simpleDBClient = simpleDBClient;
         this.domain = domain;
 
         simpleDBClient.createDomain(new CreateDomainRequest(domain));
+    }
+
+    @Override public void checkConnectivity() throws ConnectivityException
+    {
+        try
+        {
+            simpleDBClient.domainMetadata(new DomainMetadataRequest(domain));
+        }
+        catch (final Exception e)
+        {
+            throw new ConnectivityException(e);
+        }
     }
 
     @Override public void markAsConsuming(final ReadableRepresentation feedEntry) throws AlreadyConsumingException

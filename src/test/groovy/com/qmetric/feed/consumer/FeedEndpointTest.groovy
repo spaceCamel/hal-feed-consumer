@@ -1,8 +1,9 @@
 package com.qmetric.feed.consumer
 
+import com.sun.jersey.api.client.Client
+import com.sun.jersey.api.client.ClientResponse
+import com.sun.jersey.api.client.WebResource
 import spock.lang.Specification
-import us.monoid.web.Resty
-import us.monoid.web.TextResource
 
 class FeedEndpointTest extends Specification {
 
@@ -10,34 +11,28 @@ class FeedEndpointTest extends Specification {
 
     final inputStream = Mock(InputStream)
 
-    final textResource = Mock(TextResource)
+    final client = Mock(Client)
 
-    final resty = Mock(Resty)
+    final webResource = Mock(WebResource)
 
-    final feedEndpoint = new FeedEndpoint(url, resty)
+    final webResourceBuilder = Mock(WebResource.Builder)
+
+    final response = Mock(ClientResponse)
+
+    final feedEndpoint = new FeedEndpoint(url, client)
 
     def "should send request to endpoint and return response as io reader"()
     {
         given:
-        resty.text(url) >> textResource
-        textResource.stream() >> inputStream
+        client.resource(url) >> webResource
+        webResource.accept("application/hal+json") >> webResourceBuilder
+        webResourceBuilder.get(ClientResponse.class) >> response
+        response.getEntityInputStream() >> inputStream
 
         when:
-        final reader = feedEndpoint.reader()
+        final reader = feedEndpoint.get()
 
         then:
         reader
-    }
-
-    def "should rethrow io exception as runtime exception"()
-    {
-        given:
-        resty.text(url) >> {throw new IOException()}
-
-        when:
-        feedEndpoint.reader()
-
-        then:
-        thrown(RuntimeException)
     }
 }

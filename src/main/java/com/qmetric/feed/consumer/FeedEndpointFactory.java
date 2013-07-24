@@ -1,18 +1,18 @@
 package com.qmetric.feed.consumer;
 
-import us.monoid.web.Resty;
+import com.sun.jersey.api.client.Client;
 
 public class FeedEndpointFactory
 {
-    private final Resty resty;
+    private final Client client;
 
-    public FeedEndpointFactory()
+    public FeedEndpointFactory(final Client client)
     {
-        resty = RestyFactory.create();
+        this.client = client;
     }
 
     public FeedEndpoint create(final String url)
     {
-        return new FeedEndpoint(url, resty);
+        return new FeedEndpoint(url, client);
     }
 }

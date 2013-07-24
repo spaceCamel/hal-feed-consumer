@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.qmetric.feed.consumer.store.ConsumedStore;
 import com.theoryinpractise.halbuilder.DefaultRepresentationFactory;
 import com.theoryinpractise.halbuilder.api.Link;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
@@ -15,22 +16,22 @@ import java.util.List;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Iterables.concat;
 
-public class UnconsumedFeedEntriesFinder
+class UnconsumedFeedEntriesFinder
 {
-    private final ConsumedFeedEntryStore consumedFeedEntryStore;
+    private final ConsumedStore consumedStore;
 
     private final RepresentationFactory representationFactory;
 
     private final FeedEndpointFactory feedEndpointFactory;
 
-    public UnconsumedFeedEntriesFinder(final FeedEndpointFactory feedEndpointFactory, final ConsumedFeedEntryStore consumedFeedEntryStore)
+    UnconsumedFeedEntriesFinder(final FeedEndpointFactory feedEndpointFactory, final ConsumedStore consumedStore)
     {
-        this.consumedFeedEntryStore = consumedFeedEntryStore;
+        this.consumedStore = consumedStore;
         this.representationFactory = new DefaultRepresentationFactory();
         this.feedEndpointFactory = feedEndpointFactory;
     }
 
-    public List<ReadableRepresentation> findUnconsumed(final FeedEndpoint latestPageEndpoint)
+    List<ReadableRepresentation> findUnconsumed(final FeedEndpoint latestPageEndpoint)
     {
         return from(concat(ImmutableList.copyOf(new UnconsumedPageIterator(latestPageEndpoint)))) //
                 .toList() //
@@ -45,7 +46,7 @@ public class UnconsumedFeedEntriesFinder
 
         UnconsumedPageIterator(final FeedEndpoint latestPageEndpoint)
         {
-            currentPage = Optional.of(representationFactory.readRepresentation(latestPageEndpoint.reader()));
+            currentPage = Optional.of(representationFactory.readRepresentation(latestPageEndpoint.get()));
         }
 
         @Override public boolean hasNext()
@@ -75,7 +76,7 @@ public class UnconsumedFeedEntriesFinder
             {
                 @Override public ReadableRepresentation apply(final Link link)
                 {
-                    return representationFactory.readRepresentation(feedEndpointFactory.create(link.getHref()).reader());
+                    return representationFactory.readRepresentation(feedEndpointFactory.create(link.getHref()).get());
                 }
             });
         }
@@ -91,7 +92,7 @@ public class UnconsumedFeedEntriesFinder
             {
                 public boolean apply(final ReadableRepresentation input)
                 {
-                    return consumedFeedEntryStore.notAlreadyConsumed(input);
+                    return consumedStore.notAlreadyConsumed(input);
                 }
             }).toList();
         }

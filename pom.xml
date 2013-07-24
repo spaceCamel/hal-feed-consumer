@@ -64,9 +64,9 @@
         </dependency>
 
         <dependency>
-            <groupId>us.monoid.web</groupId>
-            <artifactId>resty</artifactId>
-            <version>0.3.2</version>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.17.1</version>
         </dependency>
 
         <dependency>
@@ -88,8 +88,20 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.codahale.metrics</groupId>
             <artifactId>metrics-healthchecks</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
             <version>3.0.0</version>
         </dependency>
 

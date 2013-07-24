@@ -1,7 +1,10 @@
-package com.qmetric.feed.consumer;
+package com.qmetric.feed.consumer.metrics;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.google.common.base.Optional;
+import com.qmetric.feed.consumer.EntryConsumerListener;
+import com.qmetric.feed.consumer.FeedPollingListener;
+import com.qmetric.feed.consumer.Interval;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -9,12 +12,11 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.codahale.metrics.health.HealthCheck.Result.healthy;
 import static com.codahale.metrics.health.HealthCheck.Result.unhealthy;
 
-public class ServicePerformanceHealthCheck extends HealthCheck implements ConsumeActionListener
+public class PollingActivityHealthCheck extends HealthCheck implements FeedPollingListener, EntryConsumerListener
 {
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormat.fullDateTime();
 
@@ -24,23 +26,33 @@ public class ServicePerformanceHealthCheck extends HealthCheck implements Consum
 
     private Optional<DateTime> lastConsumed = Optional.absent();
 
-    public ServicePerformanceHealthCheck(final long interval, final TimeUnit intervalUnit)
+    public PollingActivityHealthCheck(final Interval interval)
     {
-        this(interval, intervalUnit, new DateTimeSource());
+        this(interval, new DateTimeSource());
     }
 
-    ServicePerformanceHealthCheck(final long interval, final TimeUnit intervalUnit, DateTimeSource dateTimeSource)
+    PollingActivityHealthCheck(final Interval interval, DateTimeSource dateTimeSource)
     {
-        this.tolerableDelay = new Duration(intervalUnit.toMillis(interval));
+        this.tolerableDelay = new Duration(interval.unit.toMillis(interval.time));
         this.dateTimeSource = dateTimeSource;
     }
 
     @Override protected synchronized HealthCheck.Result check() throws Exception
     {
-        return  !lastConsumed.isPresent() || durationSinceLastConsumedIsLongerThanTolerableDelay() ? unhealthyResult() : healthyResult();
+        return !lastConsumed.isPresent() || durationSinceLastConsumedIsLongerThanTolerableDelay() ? unhealthyResult() : healthyResult();
     }
 
-    @Override public synchronized void consumed(final List<ReadableRepresentation> consumedEntries)
+    @Override public void consumed(final List<ReadableRepresentation> consumedEntries)
+    {
+        refreshLastConsumedDate();
+    }
+
+    @Override public void consumed(final ReadableRepresentation consumedEntry)
+    {
+        refreshLastConsumedDate();
+    }
+
+    private synchronized void refreshLastConsumedDate()
     {
         this.lastConsumed = Optional.of(dateTimeSource.now());
     }
@@ -54,17 +66,17 @@ public class ServicePerformanceHealthCheck extends HealthCheck implements Consum
     {
         if (lastConsumed.isPresent())
         {
-            return unhealthy(String.format("The feed has not been consumed since %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
+            return unhealthy(String.format("No activity since %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
         }
         else
         {
-            return unhealthy("The feed has never been consumed");
+            return unhealthy("No activity");
         }
     }
 
     private Result healthyResult()
     {
-        return healthy(String.format("The last time consume operation was successfully completed at %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
+        return healthy(String.format("Active at %s ", lastConsumed.get().toString(DATE_TIME_FORMAT)));
     }
 
     static class DateTimeSource

@@ -4,7 +4,7 @@ import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 
 import java.util.List;
 
-public interface ConsumeActionListener
+public interface FeedPollingListener
 {
     void consumed(final List<ReadableRepresentation> consumedEntries);
 }
