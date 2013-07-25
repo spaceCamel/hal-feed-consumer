@@ -9,8 +9,8 @@ Features
 ---------
 
 * Guaranteed execution of feed entries in ascending publish date order
-* Supports multiple consumers - refer to [Competing consumer pattern](#competing-consumer-pattern) below
-* Build-in health checks and metrics provided
+* Supports multiple consumers - refer to [Competing consumer pattern](#competing-consumer-pattern)
+* Built-in health checks and metrics provided
 
 
 Usage
@@ -23,7 +23,7 @@ An [Amazon SimpleDB](http://aws.amazon.com/simpledb/) based implementation is su
 final AmazonSimpleDB simpleDBClient = new AmazonSimpleDBClient(new BasicAWSCredentials("access key", "secret key"));
 simpleDBClient.setRegion(getRegion(EU_WEST_1));
 
-final ConsumedFeedEntryStore consumedFeedEntryStore = new SimpleDBConsumedEntryStore(simpleDBClient, "your-sdb-domain");
+final ConsumedStore consumedStore = new SimpleDBConsumedStore(simpleDBClient, "your-sdb-domain");
 ```
 
 Then, create and start a feed consumer:
@@ -31,7 +31,7 @@ Then, create and start a feed consumer:
 ```java
 final FeedConsumerConfiguration feedConsumer = new FeedConsumerConfiguration()
                 .fromUrl("http://your-feed-endpoint")
-                .withConsumedStore(consumedFeedEntryStore)
+                .withConsumedStore(consumedStore)
                 .consumeEachEntryWith(new ConsumeAction() {
                                           @Override public void consume(final ReadableRepresentation feedEntry) {
                                               System.out.println("write your code here to consume the next feed entry...");
@@ -54,9 +54,9 @@ Library available from [Maven central repository](http://search.maven.org/)
 Health checks and metrics
 -------------------------
 
-Build-in health checks and metrics are available by default using [codahale metrics](http://metrics.codahale.com/):
+Built-in health checks and metrics are available by default using [codahale metrics](http://metrics.codahale.com/):
 
-Codahale metric and health check registries can be retrieved via your feed consumer configuration class:
+Codahale metric and health check registries can be retrieved from your feed consumer configuration class:
 
 ```java
 final HealthCheckRegistry healthCheckRegistry = feedConsumer.getHealthCheckRegistry();
@@ -68,19 +68,10 @@ final MetricRegistry metricRegistry = feedConsumer.getMetricRegistry();
 Competing consumer pattern
 --------------------------
 
-Supports the competing consumer pattern. Multiple consumers can read from the same feed and be configured with the same ConsumedFeedEntryStore.
+Supports the competing consumer pattern. Multiple consumers can read from the same feed and be configured with the same ConsumedStore.
 
 To guarantee feed entries are consumed in ascending publish date order. This implementation ensures only a single consumer can consume at any one time - concurrent processing of
 feed entries is avoided to preserve the guaranteed execution ordering. A consumer attempting to consume an entry that is already being consumed by another consumer, will be
 delayed until the other consumer has finished consuming that entry.
 
 The main advantage for configuring multiple consumers is for failover. Increase to throughput is likely to be minimal, although feed polling rates may be more frequent.
-
-
-Implementation limitations
---------------------------
-
-There are currently some limitations with the current feed consumer implementation, described below:
-
-* On any error, the current feed consumption is aborted. Retry will occur on the next scheduled feed check, starting from the feed entry where the error occurred.
-  If the error does not resolve over time, this will result in continuous error/ retry behaviour to consume the same entry, with no other entries being consumed.
