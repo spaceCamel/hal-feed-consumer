@@ -1,5 +1,6 @@
 package com.qmetric.feed.consumer
 
+import com.google.common.base.Optional
 import com.qmetric.feed.consumer.store.ConsumedStore
 import spock.lang.Specification
 
@@ -23,7 +24,7 @@ class FeedConsumerImplTest extends Specification {
     {
         feedEndpointFactory.create(url) >> endpoint
         endpoint.get() >> new InputStreamReader(this.getClass().getResource('/feedWithEntry.json').openStream())
-        consumer = new FeedConsumerImpl(url, feedEndpointFactory, entryConsumer, consumedStore, [listener])
+        consumer = new FeedConsumerImpl(url, feedEndpointFactory, entryConsumer, consumedStore, Optional.absent(), [listener])
     }
 
     def "should consume all unconsumed entries"()

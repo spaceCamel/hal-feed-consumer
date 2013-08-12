@@ -9,6 +9,9 @@ import com.theoryinpractise.halbuilder.DefaultRepresentationFactory;
 import com.theoryinpractise.halbuilder.api.Link;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 import com.theoryinpractise.halbuilder.api.RepresentationFactory;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.util.Iterator;
 import java.util.List;
@@ -18,15 +21,20 @@ import static com.google.common.collect.Iterables.concat;
 
 class UnconsumedFeedEntriesFinder
 {
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+
     private final ConsumedStore consumedStore;
+
+    private final Optional<EarliestEntryLimit> earliestEntryLimit;
 
     private final RepresentationFactory representationFactory;
 
     private final FeedEndpointFactory feedEndpointFactory;
 
-    UnconsumedFeedEntriesFinder(final FeedEndpointFactory feedEndpointFactory, final ConsumedStore consumedStore)
+    UnconsumedFeedEntriesFinder(final FeedEndpointFactory feedEndpointFactory, final ConsumedStore consumedStore, final Optional<EarliestEntryLimit> earliestEntryLimit)
     {
         this.consumedStore = consumedStore;
+        this.earliestEntryLimit = earliestEntryLimit;
         this.representationFactory = new DefaultRepresentationFactory();
         this.feedEndpointFactory = feedEndpointFactory;
     }
@@ -41,6 +49,8 @@ class UnconsumedFeedEntriesFinder
     private class UnconsumedPageIterator implements Iterator<List<? extends ReadableRepresentation>>
     {
         private static final String NEXT_LINK_RELATION = "next";
+
+        private static final String PUBLISHED = "_published";
 
         private Optional<ReadableRepresentation> currentPage;
 
@@ -86,13 +96,23 @@ class UnconsumedFeedEntriesFinder
             return Optional.fromNullable(readableRepresentation.getLinkByRel(NEXT_LINK_RELATION));
         }
 
+        private boolean hasConsumablePublishedDate(final ReadableRepresentation entry)
+        {
+            return !earliestEntryLimit.isPresent() || earliestEntryLimit.get().date.isBefore(publishedDate(entry));
+        }
+
+        private DateTime publishedDate(final ReadableRepresentation entry)
+        {
+            return DATE_FORMATTER.parseDateTime((String) entry.getValue(PUBLISHED));
+        }
+
         private List<? extends ReadableRepresentation> unconsumedFrom(final List<? extends ReadableRepresentation> entries)
         {
             return from(entries).filter(new Predicate<ReadableRepresentation>()
             {
                 public boolean apply(final ReadableRepresentation input)
                 {
-                    return consumedStore.notAlreadyConsumed(input);
+                    return hasConsumablePublishedDate(input) && consumedStore.notAlreadyConsumed(input);
                 }
             }).toList();
         }

@@ -11,6 +11,7 @@ import com.qmetric.feed.consumer.metrics.FeedConsumerWithMetrics;
 import com.qmetric.feed.consumer.metrics.PollingActivityHealthCheck;
 import com.qmetric.feed.consumer.store.ConsumedStore;
 import com.sun.jersey.api.client.Client;
+import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,6 +44,8 @@ public class FeedConsumerConfiguration
 
     private ConsumedStore consumedStore;
 
+    private Optional<EarliestEntryLimit> earliestEntryLimit = Optional.absent();
+
     public FeedConsumerConfiguration fromUrl(final String feedUrl)
     {
         this.feedUrl = feedUrl;
@@ -74,6 +77,13 @@ public class FeedConsumerConfiguration
     public FeedConsumerConfiguration withConsumedStore(final ConsumedStore consumedStore)
     {
         this.consumedStore = consumedStore;
+
+        return this;
+    }
+
+    public FeedConsumerConfiguration ignoreEntriesEarlierThan(final DateTime dateTime)
+    {
+        earliestEntryLimit = Optional.of(new EarliestEntryLimit(dateTime));
 
         return this;
     }
@@ -124,8 +134,9 @@ public class FeedConsumerConfiguration
 
         final EntryConsumer entryConsumer = new EntryConsumerWithMetrics(metricRegistry, new EntryConsumerImpl(consumedStore, consumeAction, entryConsumerListeners));
 
-        final FeedConsumer consumer =
-                new FeedConsumerWithMetrics(metricRegistry, new FeedConsumerImpl(feedUrl, feedEndpointFactory, entryConsumer, consumedStore, feedPollingListeners));
+        final FeedConsumer consumer = new FeedConsumerWithMetrics(metricRegistry,
+                                                                  new FeedConsumerImpl(feedUrl, feedEndpointFactory, entryConsumer, consumedStore, earliestEntryLimit,
+                                                                                       feedPollingListeners));
 
         new FeedConsumerScheduler(consumer, pollingInterval).start();
 

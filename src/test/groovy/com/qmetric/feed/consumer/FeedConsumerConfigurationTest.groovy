@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.health.HealthCheck
 import com.codahale.metrics.health.HealthCheckRegistry
 import com.qmetric.feed.consumer.store.ConsumedStore
+import org.joda.time.DateTime
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
@@ -53,6 +54,18 @@ class FeedConsumerConfigurationTest extends Specification {
 
         then:
         feedConsumerConfiguration.consumedStore == consumedStore
+    }
+
+    def "should earliest published date limit"()
+    {
+        given:
+        final limit = new DateTime(2013, 8, 1, 12, 0, 0)
+
+        when:
+        feedConsumerConfiguration.ignoreEntriesEarlierThan(limit)
+
+        then:
+        feedConsumerConfiguration.earliestEntryLimit.get().date == limit
     }
 
     def "should accept listeners"()

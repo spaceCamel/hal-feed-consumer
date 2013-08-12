@@ -1,7 +1,9 @@
 package com.qmetric.feed.consumer
 
+import com.google.common.base.Optional
 import com.qmetric.feed.consumer.store.ConsumedStore
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation
+import org.joda.time.DateTime
 import spock.lang.Specification
 
 class UnconsumedFeedEntriesFinderTest extends Specification {
@@ -16,7 +18,7 @@ class UnconsumedFeedEntriesFinderTest extends Specification {
 
     def feedEndpointFactory = Mock(FeedEndpointFactory)
 
-    def store = new UnconsumedFeedEntriesFinder(feedEndpointFactory, consumedStore)
+    def store = new UnconsumedFeedEntriesFinder(feedEndpointFactory, consumedStore, Optional.absent())
 
     def "should return all entries provided feed contains all unconsumed entries"()
     {
@@ -29,6 +31,20 @@ class UnconsumedFeedEntriesFinderTest extends Specification {
 
         then:
         unprocessedList.collect { it.getValue("_id") } == ['idOfOldestUnconsumed', 'idOfNewestUnconsumed']
+    }
+
+    def "should return all unconsumed entries provided entries occurred after given earliest date restriction"()
+    {
+        given:
+        def storeWithRestrictionOnEarliestDate = new UnconsumedFeedEntriesFinder(feedEndpointFactory, consumedStore, Optional.of(new EarliestEntryLimit(new DateTime(2013, 5, 23, 0, 0, 1))))
+        firstPageEndpoint.get() >> new InputStreamReader(this.getClass().getResource('/feedWithAllUnconsumed.json').openStream())
+        consumedStore.notAlreadyConsumed(_) >>> [true, true]
+
+        when:
+        List<ReadableRepresentation> unprocessedList = storeWithRestrictionOnEarliestDate.findUnconsumed(firstPageEndpoint)
+
+        then:
+        unprocessedList.collect { it.getValue("_id") } == ['idOfNewestUnconsumed']
     }
 
     def "should return only unconsumed entries provided feed contains some unconsumed entries"()

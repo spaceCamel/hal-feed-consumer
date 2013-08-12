@@ -1,5 +1,6 @@
 package com.qmetric.feed.consumer;
 
+import com.google.common.base.Optional;
 import com.qmetric.feed.consumer.store.ConsumedStore;
 import com.theoryinpractise.halbuilder.api.ReadableRepresentation;
 
@@ -17,12 +18,12 @@ public class FeedConsumerImpl implements FeedConsumer
     private final Collection<FeedPollingListener> listeners;
 
     public FeedConsumerImpl(final String feedUrl, final FeedEndpointFactory endpointFactory, final EntryConsumer entryConsumer, final ConsumedStore consumedStore,
-                            final Collection<FeedPollingListener> listeners)
+                            final Optional<EarliestEntryLimit> earliestEntryLimit, final Collection<FeedPollingListener> listeners)
     {
         this.entryConsumer = entryConsumer;
         this.listeners = listeners;
         this.endpoint = endpointFactory.create(feedUrl);
-        this.finder = new UnconsumedFeedEntriesFinder(endpointFactory, consumedStore);
+        this.finder = new UnconsumedFeedEntriesFinder(endpointFactory, consumedStore, earliestEntryLimit);
     }
 
     @Override
