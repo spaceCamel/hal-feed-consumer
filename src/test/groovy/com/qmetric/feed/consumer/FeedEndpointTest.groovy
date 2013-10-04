@@ -1,38 +1,30 @@
 package com.qmetric.feed.consumer
 
-import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.WebResource
 import spock.lang.Specification
 
-class FeedEndpointTest extends Specification {
+import static net.java.quickcheck.generator.PrimitiveGeneratorSamples.anyNonEmptyString
+import static org.apache.commons.io.IOUtils.toString
 
-    final url = "http://host/feed"
-
-    final inputStream = Mock(InputStream)
-
-    final client = Mock(Client)
-
-    final webResource = Mock(WebResource)
-
-    final webResourceBuilder = Mock(WebResource.Builder)
-
-    final response = Mock(ClientResponse)
-
-    final feedEndpoint = new FeedEndpoint(url, client)
+class FeedEndpointTest extends Specification
+{
+    private final expectedString = anyNonEmptyString()
+    private final inputStream = new ByteArrayInputStream(expectedString.getBytes("UTF-8"))
+    private final webResource = Mock(WebResource)
+    private final webResourceBuilder = Mock(WebResource.Builder)
+    private final response = Mock(ClientResponse)
+    private final feedEndpoint = new FeedEndpoint(webResource)
 
     def "should send request to endpoint and return response as io reader"()
     {
-        given:
-        client.resource(url) >> webResource
-        webResource.accept("application/hal+json") >> webResourceBuilder
-        webResourceBuilder.get(ClientResponse.class) >> response
-        response.getEntityInputStream() >> inputStream
-
         when:
         final reader = feedEndpoint.get()
 
         then:
-        reader
+        1 * webResource.accept("application/hal+json") >> webResourceBuilder
+        1 * webResourceBuilder.get(ClientResponse.class) >> response
+        1 * response.getEntityInputStream() >> inputStream
+        expectedString == toString(reader)
     }
 }

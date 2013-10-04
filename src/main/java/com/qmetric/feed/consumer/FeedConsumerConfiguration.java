@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class FeedConsumerConfiguration
 {
@@ -28,7 +29,7 @@ public class FeedConsumerConfiguration
 
     private final Client feedClient = new Client();
 
-    private final FeedEndpointFactory feedEndpointFactory = new FeedEndpointFactory(feedClient);
+    private final FeedEndpointFactory feedEndpointFactory = new FeedEndpointFactory(feedClient, new FeedEndpointFactory.ConnectioTimeout(MINUTES, 1));
 
     private HealthCheckRegistry healthCheckRegistry = new HealthCheckRegistry();
 
